@@ -1,0 +1,69 @@
+/// Drives the statement's columns. One P&L, three questions: how are we tracking so far, where
+/// will the year land, and what has moved in the months still open.
+/// 
+/// Disconnected on purpose. The captions sit on the matrix's column axis and a single measure
+/// ([Cell]) resolves each cell, so switching view changes both the numbers and the column
+/// headings. A field parameter is the other way to do this, but it binds a column into a
+/// measure-only role and the matrix then reports "can't determine relationships between the
+/// fields", because it never expands the parameter into the measures behind it.
+/// 
+/// Column Order is global rather than per view, because a sort-by column has to map each caption
+/// to exactly one position. Captions used by more than one view therefore keep the same slot, and
+/// the gaps in the numbering are what let each view still read in the right order.
+table 'Report View'
+	lineageTag: 6f83ed7d-2394-472c-b44d-8c5e34dbebde
+
+	column Column
+		dataType: string
+		lineageTag: 3f9dfe4f-0e73-495b-93f4-3bf91a9e5e82
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Column Order'
+
+	column 'Column Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d0bd496c-90d1-431e-8839-377608f33ade
+		summarizeBy: none
+		sourceColumn: [Value2]
+
+	column View
+		dataType: string
+		lineageTag: c5226e3d-c240-4aa7-bdd3-7cdfafa9affa
+		summarizeBy: none
+		sourceColumn: [Value3]
+		sortByColumn: 'View Order'
+
+	column 'View Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 75092492-bd56-4f76-b6b6-a247986b2133
+		summarizeBy: none
+		sourceColumn: [Value4]
+
+	partition 'Report View' = calculated
+		mode: import
+		source =
+				{
+				    ("Budget YTD",    110, "YTD Performance",   1),
+				    ("Actual YTD",    120, "YTD Performance",   1),
+				    ("Δ YTD",         130, "YTD Performance",   1),
+				    ("Δ YTD %",       140, "YTD Performance",   1),
+				    ("Prior Yr YTD",  150, "YTD Performance",   1),
+				    ("YoY %",         160, "YTD Performance",   1),
+				    ("BUD FY",         10, "Full-Year Landing", 2),
+				    ("FC FY",          20, "Full-Year Landing", 2),
+				    ("Δ BUD",          30, "Full-Year Landing", 2),
+				    ("Δ BUD %",        40, "Full-Year Landing", 2),
+				    ("AC YTD",         50, "Full-Year Landing", 2),
+				    ("FC to Go",       60, "Full-Year Landing", 2),
+				    ("BUD FY",         10, "Forecast Revision", 3),
+				    ("FC FY",          20, "Forecast Revision", 3),
+				    ("Δ BUD",          30, "Forecast Revision", 3),
+				    ("BUD to Go",      45, "Forecast Revision", 3),
+				    ("FC to Go",       60, "Forecast Revision", 3),
+				    ("Δ to Go",        70, "Forecast Revision", 3)
+				}
+

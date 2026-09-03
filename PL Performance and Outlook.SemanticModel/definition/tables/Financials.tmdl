@@ -1,0 +1,56 @@
+/// One row per month x business unit x account x scenario. Actual rows come straight from the
+/// source general ledger; Budget and Forecast rows are produced by the ETL (see README).
+table Financials
+	lineageTag: ecba0be7-2060-483c-9466-9e47f6515f4d
+
+	column Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 4505d583-4a52-4c42-885d-1a6fd37994c8
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Territory_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3fdd08e5-c2e2-4bfd-9068-808a1277e5d5
+		summarizeBy: none
+		sourceColumn: Territory_key
+
+	column Account_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 856a5dc2-8d52-4819-8b8d-53f85c2476b6
+		summarizeBy: none
+		sourceColumn: Account_key
+
+	column Scenario
+		dataType: string
+		isHidden
+		lineageTag: b796ad8d-61fb-406a-be10-f90b4ffe030e
+		summarizeBy: none
+		sourceColumn: Scenario
+
+	/// Signed amount in the reporting currency. Income is positive, costs are negative, exactly as
+	/// posted in the ledger. The presentation flip to positive costs happens in the measures.
+	column Amount
+		dataType: double
+		formatString: #,0
+		lineageTag: f5e7855e-3ab4-42ce-ab56-70494d31d7bf
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	partition Financials = m
+		mode: import
+		source =
+				let
+				    #"Read Fact File" = Csv.Document(File.Contents(#"Data Folder" & "\fact_pl.csv"), [Delimiter=",", Columns=5, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Header Row" = Table.PromoteHeaders(#"Read Fact File", [PromoteAllScalars=true]),
+				    #"Applied Types" = Table.TransformColumnTypes(#"Promoted Header Row", {{"Date", type date}, {"Territory_key", Int64.Type}, {"Account_key", Int64.Type}, {"Scenario", type text}, {"Amount", type number}})
+				in
+				    #"Applied Types"
+
+	annotation PBI_ResultType = Table
+

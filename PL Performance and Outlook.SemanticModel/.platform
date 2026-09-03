@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "PL Performance and Outlook"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "7b2e4c91-5a63-42d8-b0f7-3e91c4a6d502"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "PL Performance and Outlook"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "c48d1f07-9b25-4e6a-8d13-5f2a70c9e4b6"
+  }
+}

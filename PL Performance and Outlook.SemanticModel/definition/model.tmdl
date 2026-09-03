@@ -1,0 +1,24 @@
+model Model
+	culture: en-GB
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-GB
+
+annotation PBI_QueryOrder = ["Financials","Date","Business Unit","Account","Scenario","P&L Line","PL Bridge"]
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table Financials
+ref table Date
+ref table 'Business Unit'
+ref table Account
+ref table Scenario
+ref table 'P&L Line'
+ref table 'PL Bridge'
+ref table Metrics
+ref table 'Report View'
+
+ref cultureInfo en-GB
+

@@ -1,0 +1,414 @@
+/// Measure-only table. Nothing here stores data; the single hidden column exists because a table
+/// needs one.
+/// 
+/// The chain is: _Raw resolves the selected P&L line to its accounts -> _Signed flips costs to
+/// print positive -> _Actual/_Budget/_Forecast pin the scenario -> the period measures pin the
+/// window -> the Fmt measures render the cell, branching on whether the row is a margin row.
+table Metrics
+	lineageTag: f721665c-af2c-4439-8294-0ec53794e2c1
+
+	/// Sum of the accounts that roll into the P&L line in filter context. TREATAS pushes the
+	/// account list from the bridge onto Account, so a subtotal row and the detail rows beneath it
+	/// can sit in the same matrix without the shared accounts being counted twice.
+	measure _Raw =
+			VAR LineAccounts = VALUES('PL Bridge'[Account_key])
+			RETURN
+			    CALCULATE(
+			        SUM(Financials[Amount]),
+			        TREATAS(LineAccounts, Account[Account_key])
+			    )
+		isHidden
+		lineageTag: 90fca5ce-bfbc-4cb3-9dbf-d4ec3a300108
+
+	/// Flips naturally negative cost lines so the statement reads with positive costs.
+	measure _Signed = [_Raw] * SELECTEDVALUE('P&L Line'[Display Sign], 1)
+		isHidden
+		lineageTag: 4247d3b9-9e99-4dfa-ad18-07bb56bf804c
+
+	measure _Actual = CALCULATE([_Signed], REMOVEFILTERS(Scenario), Scenario[Scenario] = "Actual")
+		isHidden
+		lineageTag: fc22b548-777b-4d86-8b4e-62039a0f4087
+
+	measure _Budget = CALCULATE([_Signed], REMOVEFILTERS(Scenario), Scenario[Scenario] = "Budget")
+		isHidden
+		lineageTag: 699da883-6ded-40f0-beba-312da4dd096a
+
+	measure _Forecast = CALCULATE([_Signed], REMOVEFILTERS(Scenario), Scenario[Scenario] = "Forecast")
+		isHidden
+		lineageTag: e3b88d4a-eace-4633-9ecb-5b72445fa102
+
+	/// Actual, January through the October close.
+	measure 'AC YTD' = CALCULATE([_Actual], ALLEXCEPT('Date', 'Date'[Year]), 'Date'[Is YTD] = 1)
+		formatString: #,0
+		lineageTag: 2aa09d5e-66a0-4266-89e9-461d07c56093
+
+	/// Budget for the same year-to-date window, so the YTD variance compares like with like.
+	measure 'BUD YTD' = CALCULATE([_Budget], ALLEXCEPT('Date', 'Date'[Year]), 'Date'[Is YTD] = 1)
+		formatString: #,0
+		lineageTag: 6d780b4e-dc47-4e90-9af4-7fae136d0e22
+
+	/// Prior year, same January-to-October window.
+	measure 'PY YTD' =
+			VAR PriorYear = MAX('Date'[Year]) - 1
+			RETURN
+			    CALCULATE(
+			        [_Actual],
+			        REMOVEFILTERS('Date'),
+			        'Date'[Year] = PriorYear,
+			        'Date'[Is YTD] = 1
+			    )
+		formatString: #,0
+		lineageTag: 929bfc28-0f49-44a5-8c35-ad1173c9f750
+
+	/// Forecast for the months still open - November and December.
+	measure 'FC to Go' = CALCULATE([_Forecast], ALLEXCEPT('Date', 'Date'[Year]), 'Date'[Is YTD] = 0)
+		formatString: #,0
+		lineageTag: a8149fc5-5b89-4cd0-abb9-2d9b8f6c6e2c
+
+	/// What the budget had pencilled in for those same remaining months.
+	measure 'BUD to Go' = CALCULATE([_Budget], ALLEXCEPT('Date', 'Date'[Year]), 'Date'[Is YTD] = 0)
+		formatString: #,0
+		lineageTag: 98c1dba3-ca9b-4213-aae9-3a07beef868b
+
+	/// Full-year budget, as locked before the year started.
+	measure 'BUD FY' = CALCULATE([_Budget], ALLEXCEPT('Date', 'Date'[Year]))
+		formatString: #,0
+		lineageTag: 8690d241-1e51-4e73-8639-ffa798d16a8c
+
+	/// Full-year landing: actuals to the close month plus forecast for the rest.
+	measure 'FC FY' = CALCULATE([_Forecast], ALLEXCEPT('Date', 'Date'[Year]))
+		formatString: #,0
+		lineageTag: f8c4478e-cbae-41e7-99b1-73b2c081c243
+
+	measure 'AC FY' = CALCULATE([_Actual], ALLEXCEPT('Date', 'Date'[Year]))
+		formatString: #,0
+		lineageTag: 2a69bdc1-f036-4a9e-8b49-5e5b1e6d95f3
+
+	measure 'Var BUD' = [FC FY] - [BUD FY]
+		formatString: #,0
+		lineageTag: d7a68fc5-48dd-42e3-8190-d1e9da292f5a
+
+	/// ABS on the denominator so a negative base cannot flip the sign of the percentage.
+	measure 'Var BUD %' = DIVIDE([Var BUD], ABS([BUD FY]))
+		formatString: 0.0%
+		lineageTag: db598b72-1893-4efb-a947-941e72967e5d
+
+	measure 'Var YTD' = [AC YTD] - [BUD YTD]
+		formatString: #,0
+		lineageTag: 20664922-f7ec-4542-9269-fe787a6423a6
+
+	measure 'Var YTD %' = DIVIDE([Var YTD], ABS([BUD YTD]))
+		formatString: 0.0%
+		lineageTag: 9ff34e71-7750-4753-a344-3a43f88aece4
+
+	measure 'Var to Go' = [FC to Go] - [BUD to Go]
+		formatString: #,0
+		lineageTag: 475e991f-88f9-4b25-8525-a7dbf8f4d62a
+
+	measure 'YoY %' = DIVIDE([AC YTD] - [PY YTD], ABS([PY YTD]))
+		formatString: 0.0%
+		lineageTag: 98fed98f-6338-4306-845e-337868a3570d
+
+	measure '_Rev AC YTD' = CALCULATE([AC YTD], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+		isHidden
+		lineageTag: 512dd903-f84b-497e-a67f-78a12c10ce95
+
+	measure '_Rev BUD YTD' = CALCULATE([BUD YTD], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+		isHidden
+		lineageTag: 85fe95d6-bcd3-487a-a4b7-61beca012f25
+
+	measure '_Rev PY YTD' = CALCULATE([PY YTD], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+		isHidden
+		lineageTag: 71280922-5d54-4697-a60d-45f12bf332b2
+
+	measure '_Rev BUD FY' = CALCULATE([BUD FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+		isHidden
+		lineageTag: 0a255d1b-6041-485e-8511-60b5bc6e0135
+
+	measure '_Rev FC FY' = CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+		isHidden
+		lineageTag: 34a77b79-2caf-43ce-b28a-9c746b605d77
+
+	measure '_Rev FC to Go' = CALCULATE([FC to Go], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+		isHidden
+		lineageTag: 24f92132-0777-432c-b335-973b90e678fd
+
+	measure '_Rev BUD to Go' = CALCULATE([BUD to Go], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+		isHidden
+		lineageTag: a5c13c09-550d-4275-9ff1-7bb11125678a
+
+	measure 'AC YTD Fmt' =
+			VAR V = [AC YTD]
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(DIVIDE(V, [_Rev AC YTD]), "0.0%"),
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "#,##0;(#,##0)"))
+			    )
+		lineageTag: 6d4f66df-0eee-4257-89e0-4508f1127979
+
+	measure 'BUD YTD Fmt' =
+			VAR V = [BUD YTD]
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(DIVIDE(V, [_Rev BUD YTD]), "0.0%"),
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "#,##0;(#,##0)"))
+			    )
+		lineageTag: 9b4bdd25-4578-47b2-9444-dafc9d9c6306
+
+	measure 'PY YTD Fmt' =
+			VAR V = [PY YTD]
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(DIVIDE(V, [_Rev PY YTD]), "0.0%"),
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "#,##0;(#,##0)"))
+			    )
+		lineageTag: c3df1138-2f9f-4771-a41b-2ce4e4e52c6c
+
+	measure 'BUD FY Fmt' =
+			VAR V = [BUD FY]
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(DIVIDE(V, [_Rev BUD FY]), "0.0%"),
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "#,##0;(#,##0)"))
+			    )
+		lineageTag: db256d33-a376-4b38-a7ce-19b525a01f91
+
+	measure 'FC FY Fmt' =
+			VAR V = [FC FY]
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(DIVIDE(V, [_Rev FC FY]), "0.0%"),
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "#,##0;(#,##0)"))
+			    )
+		lineageTag: 0d62fc41-6ed2-4274-b207-ce0ae087bcb0
+
+	measure 'FC to Go Fmt' =
+			VAR V = [FC to Go]
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(DIVIDE(V, [_Rev FC to Go]), "0.0%"),
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "#,##0;(#,##0)"))
+			    )
+		lineageTag: f48f7cb1-329b-4392-89ee-2a17dc7c2d18
+
+	measure 'BUD to Go Fmt' =
+			VAR V = [BUD to Go]
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(DIVIDE(V, [_Rev BUD to Go]), "0.0%"),
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "#,##0;(#,##0)"))
+			    )
+		lineageTag: aeb0c654-d9e2-43e2-a4e6-f3b8e72c44d1
+
+	/// On a margin row the variance is a movement in the ratio, so it is shown in percentage
+	/// points rather than as a currency delta.
+	measure 'Var BUD Fmt' =
+			VAR V = [Var BUD]
+			VAR MarginMove = DIVIDE([FC FY], [_Rev FC FY]) - DIVIDE([BUD FY], [_Rev BUD FY])
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(MarginMove * 100, "+0.0;-0.0;0.0") & "pp",
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "+#,##0;-#,##0"))
+			    )
+		lineageTag: e607905b-bf37-4432-b12d-79ac34eb4991
+
+	measure 'Var YTD Fmt' =
+			VAR V = [Var YTD]
+			VAR MarginMove = DIVIDE([AC YTD], [_Rev AC YTD]) - DIVIDE([BUD YTD], [_Rev BUD YTD])
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(MarginMove * 100, "+0.0;-0.0;0.0") & "pp",
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "+#,##0;-#,##0"))
+			    )
+		lineageTag: aed35350-4e1a-4fdb-ab48-0dfcf92e6fd0
+
+	measure 'Var to Go Fmt' =
+			VAR V = [Var to Go]
+			VAR MarginMove = DIVIDE([FC to Go], [_Rev FC to Go]) - DIVIDE([BUD to Go], [_Rev BUD to Go])
+			RETURN
+			    IF(
+			        SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			        FORMAT(MarginMove * 100, "+0.0;-0.0;0.0") & "pp",
+			        IF(V = 0, BLANK(), FORMAT(DIVIDE(V, 1000), "+#,##0;-#,##0"))
+			    )
+		lineageTag: 5085eb71-d1aa-4ff8-8131-5f2f4ff9ae04
+
+	/// A percentage change of a percentage is not meaningful, so margin rows stay empty here.
+	measure 'Var BUD % Fmt' =
+			IF(
+			    SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			    BLANK(),
+			    FORMAT([Var BUD %], "+0.0%;-0.0%;0.0%")
+			)
+		lineageTag: 2b15e88d-2bfa-488f-a598-f8210d0aa41f
+
+	measure 'Var YTD % Fmt' =
+			IF(
+			    SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			    BLANK(),
+			    FORMAT([Var YTD %], "+0.0%;-0.0%;0.0%")
+			)
+		lineageTag: 089e1889-348a-4906-9f4d-16187f27cf6f
+
+	measure 'YoY % Fmt' =
+			IF(
+			    SELECTEDVALUE('P&L Line'[Row Type]) = "Margin",
+			    BLANK(),
+			    FORMAT([YoY %], "+0.0%;-0.0%;0.0%")
+			)
+		lineageTag: f66cecee-c296-40b3-9b69-51942e002b96
+
+	measure '_Var BUD Colour' =
+			VAR Favourable = [Var BUD] * SELECTEDVALUE('P&L Line'[Display Sign], 1)
+			RETURN SWITCH(TRUE(), Favourable > 0, "#186A4B", Favourable < 0, "#B3261E", "#5B6470")
+		isHidden
+		lineageTag: 53a9e108-a421-42aa-82b7-ff0d4c8fb868
+
+	measure '_Var YTD Colour' =
+			VAR Favourable = [Var YTD] * SELECTEDVALUE('P&L Line'[Display Sign], 1)
+			RETURN SWITCH(TRUE(), Favourable > 0, "#186A4B", Favourable < 0, "#B3261E", "#5B6470")
+		isHidden
+		lineageTag: 556f414b-6952-4069-a9a7-b8c8900d6bab
+
+	measure '_Var to Go Colour' =
+			VAR Favourable = [Var to Go] * SELECTEDVALUE('P&L Line'[Display Sign], 1)
+			RETURN SWITCH(TRUE(), Favourable > 0, "#186A4B", Favourable < 0, "#B3261E", "#5B6470")
+		isHidden
+		lineageTag: a07e5035-63ec-40ad-ad8b-5015fa4cf63b
+
+	measure '_YoY Colour' =
+			VAR Favourable = ([AC YTD] - [PY YTD]) * SELECTEDVALUE('P&L Line'[Display Sign], 1)
+			RETURN SWITCH(TRUE(), Favourable > 0, "#186A4B", Favourable < 0, "#B3261E", "#5B6470")
+		isHidden
+		lineageTag: f9202970-bf09-45cd-bb95-208dca458d51
+
+	/// Headline lines dark, breakdown rows mid, margin rows light - the row hierarchy carried by
+	/// weight of colour rather than indentation alone.
+	measure '_Row Colour' =
+			SWITCH(
+			    SELECTEDVALUE('P&L Line'[Row Type]),
+			    "Subtotal", "#0B2B4A",
+			    "Margin", "#8A94A0",
+			    "#3C4855"
+			)
+		isHidden
+		lineageTag: d4a3bf47-322e-42f6-8e1a-87e3fe770bb9
+
+	measure 'KPI Revenue FC' = DIVIDE(CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue"), 1000)
+		formatString: #,0
+		lineageTag: d9eb6729-c1e3-43ab-b4d1-eadd9814eaeb
+
+	measure 'KPI EBITDA FC' = DIVIDE(CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "EBITDA"), 1000)
+		formatString: #,0
+		lineageTag: bd1af212-22ca-41a4-85ba-7e01f39f8d50
+
+	measure 'KPI EBITDA Var BUD' = DIVIDE(CALCULATE([Var BUD], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "EBITDA"), 1000)
+		formatString: +#,0;-#,0;0
+		lineageTag: 45b62063-50eb-4880-8f60-f7b49d942c21
+
+	measure 'KPI Net Income FC' = DIVIDE(CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Net Income"), 1000)
+		formatString: #,0
+		lineageTag: 0c3f9407-4b6a-4ec8-9cad-ca1ed90461f9
+
+	measure 'KPI Gross Margin FC' =
+			DIVIDE(
+			    CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Gross Profit"),
+			    CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+			)
+		formatString: 0.0%
+		lineageTag: 88ed6205-879a-4626-a7c1-a18771a28a48
+
+	measure 'KPI EBITDA Margin FC' =
+			DIVIDE(
+			    CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "EBITDA"),
+			    CALCULATE([FC FY], REMOVEFILTERS('P&L Line'), 'P&L Line'[PL Line] = "Revenue")
+			)
+		formatString: 0.0%
+		lineageTag: ad08f7f1-9c26-424a-9113-59b710e24232
+
+	/// Blanked past the close month with KEEPFILTERS, so the actual line stops where the actuals
+	/// stop. The ledger does hold November and December, but the report is written as at October.
+	measure 'Actual (month)' = CALCULATE(DIVIDE([_Actual], 1000), KEEPFILTERS('Date'[Is YTD] = 1))
+		formatString: #,0
+		lineageTag: 4fd5c330-bdd6-4220-b315-329a55de01a0
+
+	measure 'Budget (month)' = DIVIDE([_Budget], 1000)
+		formatString: #,0
+		lineageTag: 21d35f5f-ea26-4fae-aa28-988218107fd8
+
+	measure 'Forecast (month)' = DIVIDE([_Forecast], 1000)
+		formatString: #,0
+		lineageTag: e3ed41fb-033a-48ce-8613-e8500b5f5ac7
+
+	/// The statement's only value measure. The matrix puts the caption for the selected view on
+	/// its column axis; this asks which column it is in and hands back the right rendered figure.
+	/// One measure, three views, and the column headings change with the view because they are
+	/// real column values rather than measure names.
+	measure Cell =
+			SWITCH(
+			    SELECTEDVALUE('Report View'[Column]),
+			    "BUD FY", [BUD FY Fmt],
+			    "FC FY", [FC FY Fmt],
+			    "Δ BUD", [Var BUD Fmt],
+			    "Δ BUD %", [Var BUD % Fmt],
+			    "AC YTD", [AC YTD Fmt],
+			    "FC to Go", [FC to Go Fmt],
+			    "BUD to Go", [BUD to Go Fmt],
+			    "Δ to Go", [Var to Go Fmt],
+			    "Budget YTD", [BUD YTD Fmt],
+			    "Actual YTD", [AC YTD Fmt],
+			    "Δ YTD", [Var YTD Fmt],
+			    "Δ YTD %", [Var YTD % Fmt],
+			    "Prior Yr YTD", [PY YTD Fmt],
+			    "YoY %", [YoY % Fmt]
+			)
+		lineageTag: 7cabda11-7c43-436d-b21d-be2c8ca2f462
+
+	/// Font colour for the matrix cells. The columns are caption values, so the measure
+	/// asks which column it is being evaluated in and colours the variance columns by
+	/// favourability, leaving the value columns to follow the row hierarchy.
+	measure '_Cell Colour' =
+			SWITCH(
+			    SELECTEDVALUE('Report View'[Column]),
+			    "Δ BUD", [_Var BUD Colour],
+			    "Δ BUD %", [_Var BUD Colour],
+			    "Δ YTD", [_Var YTD Colour],
+			    "Δ YTD %", [_Var YTD Colour],
+			    "Δ to Go", [_Var to Go Colour],
+			    "YoY %", [_YoY Colour],
+			    [_Row Colour]
+			)
+		isHidden
+		lineageTag: cead4384-3a46-4f62-ad4d-f6dd04a31418
+
+	/// Spells out the basis of the numbers on screen so the statement is never read out of context.
+	measure 'Report Basis' =
+			VAR Y = SELECTEDVALUE('Date'[Year], 2020)
+			VAR Units = COUNTROWS(ALLSELECTED('Business Unit'[Business Unit]))
+			VAR Scope = IF(Units = 7, "all business units", Units & " of 7 business units")
+			RETURN
+			    "FY" & Y & "  |  actuals through October + forecast  |  " & Scope & "  |  $000"
+		lineageTag: 45393888-225b-40b1-a870-ecd4e3ef833f
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 4205cd65-0e58-4dbb-9413-2661f15bd699
+		summarizeBy: none
+		sourceColumn: [Placeholder]
+
+	partition Metrics = calculated
+		mode: import
+		source = ROW("Placeholder", "")
+
+	annotation PBI_Id = MetricsTable
+

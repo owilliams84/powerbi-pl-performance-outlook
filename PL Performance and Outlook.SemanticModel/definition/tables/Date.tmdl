@@ -1,0 +1,70 @@
+/// Month-grain calendar, one row per month from 2018 to 2020. Deliberately not marked as a date
+/// table: the rows are month starts rather than contiguous days, and the report uses explicit
+/// year/YTD flags instead of time intelligence.
+table Date
+	lineageTag: 5fb8cd6d-1fb8-4a11-af57-b691a7e71b17
+
+	column Date
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 37f0ed0a-54ba-420b-aa63-43686f74ce41
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 789055ba-7e4a-4982-bbb4-4a8decac3b9b
+		summarizeBy: none
+		sourceColumn: Year
+
+	column Quarter
+		dataType: string
+		lineageTag: a0a4e015-ebd2-4ea2-ae75-3831a7cfd9bb
+		summarizeBy: none
+		sourceColumn: Quarter
+
+	column 'Month No'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a171d63b-d198-414f-ba13-b5cee4629ef0
+		summarizeBy: none
+		sourceColumn: Month No
+
+	column Month
+		dataType: string
+		lineageTag: 0741e020-b123-42d5-bf92-38202c3dc67e
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Month No'
+
+	column 'Year Month'
+		dataType: string
+		lineageTag: 1405e623-a0ba-4fce-a260-c6fc9877ef3c
+		summarizeBy: none
+		sourceColumn: Year Month
+
+	/// 1 for months inside the year-to-date window (January through the October close), 0 for the
+	/// remaining months. Year-agnostic on purpose, so the same window can be compared across years.
+	column 'Is YTD'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8168043c-686f-4b11-b371-9e65808ef973
+		summarizeBy: none
+		sourceColumn: Is YTD
+
+	partition Date = m
+		mode: import
+		source =
+				let
+				    #"Read Date File" = Csv.Document(File.Contents(#"Data Folder" & "\dim_date.csv"), [Delimiter=",", Columns=7, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Header Row" = Table.PromoteHeaders(#"Read Date File", [PromoteAllScalars=true]),
+				    #"Applied Types" = Table.TransformColumnTypes(#"Promoted Header Row", {{"Date", type date}, {"Year", Int64.Type}, {"Quarter", type text}, {"Month No", Int64.Type}, {"Month", type text}, {"Year Month", type text}, {"Is YTD", Int64.Type}})
+				in
+				    #"Applied Types"
+
+	annotation PBI_ResultType = Table
+

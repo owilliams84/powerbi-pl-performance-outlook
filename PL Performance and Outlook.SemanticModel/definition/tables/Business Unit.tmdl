@@ -1,0 +1,36 @@
+/// Reporting entities. The source calls these territories; they are the P&L's business units.
+table 'Business Unit'
+	lineageTag: 3f269bdf-70d4-4ad6-985f-1650ba5a1734
+
+	column Territory_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: fb9e3661-aa31-4095-8c04-6c1900cb89d3
+		summarizeBy: none
+		sourceColumn: Territory_key
+
+	column 'Business Unit'
+		dataType: string
+		lineageTag: 4ce5f2f1-626d-47e1-9c6f-60391affd322
+		summarizeBy: none
+		sourceColumn: Business Unit
+
+	column Region
+		dataType: string
+		lineageTag: 7b49e41f-cfb4-48bb-b448-8f6b0e459aca
+		summarizeBy: none
+		sourceColumn: Region
+
+	partition 'Business Unit' = m
+		mode: import
+		source =
+				let
+				    #"Read Business Unit File" = Csv.Document(File.Contents(#"Data Folder" & "\dim_business_unit.csv"), [Delimiter=",", Columns=3, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Header Row" = Table.PromoteHeaders(#"Read Business Unit File", [PromoteAllScalars=true]),
+				    #"Applied Types" = Table.TransformColumnTypes(#"Promoted Header Row", {{"Territory_key", Int64.Type}, {"Business Unit", type text}, {"Region", type text}})
+				in
+				    #"Applied Types"
+
+	annotation PBI_ResultType = Table
+

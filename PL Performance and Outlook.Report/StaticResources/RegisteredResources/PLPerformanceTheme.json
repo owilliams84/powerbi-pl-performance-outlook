@@ -1,0 +1,81 @@
+{
+  "name": "PLPerformanceTheme.json",
+  "dataColors": [
+    "#14283C",
+    "#A9B2BF",
+    "#C2703D",
+    "#186A4B",
+    "#B3261E",
+    "#4A6E8A",
+    "#A8894F",
+    "#7A8794"
+  ],
+  "background": "#F4F2EE",
+  "foreground": "#3C4855",
+  "tableAccent": "#14283C",
+  "good": "#186A4B",
+  "neutral": "#7A8794",
+  "bad": "#B3261E",
+  "textClasses": {
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 14,
+      "color": "#14283C"
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 11,
+      "color": "#14283C"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 9,
+      "color": "#3C4855"
+    },
+    "callout": {
+      "fontFace": "Segoe UI",
+      "fontSize": 20,
+      "color": "#14283C"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            }
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#E3DFD8"
+              }
+            },
+            "radius": 4
+          }
+        ],
+        "padding": [
+          {
+            "top": 8,
+            "bottom": 8,
+            "left": 10,
+            "right": 10
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+/// The P&L half of the source chart of accounts, 26 accounts with their natural hierarchy.
+table Account
+	lineageTag: c7a9e89d-9b82-4355-9f16-3d59d26003d1
+
+	column Account_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2ae03451-a7a6-4d9c-8e9f-e98c73ceafc2
+		summarizeBy: none
+		sourceColumn: Account_key
+
+	column Class
+		dataType: string
+		lineageTag: 29097e4e-c1ea-4650-8326-5a138d20edcb
+		summarizeBy: none
+		sourceColumn: Class
+
+	column SubClass
+		dataType: string
+		lineageTag: 0112aa6d-492d-45d0-a7b2-2141db3e4684
+		summarizeBy: none
+		sourceColumn: SubClass
+
+	column SubClass2
+		dataType: string
+		lineageTag: 539f2a7c-ca5b-41df-9438-4adbf70ccf11
+		summarizeBy: none
+		sourceColumn: SubClass2
+
+	column Account
+		dataType: string
+		lineageTag: 2aaaa5e6-b08a-447c-ad42-eda695616102
+		summarizeBy: none
+		sourceColumn: Account
+
+	column SubAccount
+		dataType: string
+		lineageTag: b74ab314-1c62-4d0b-9d47-b689e087a8f2
+		summarizeBy: none
+		sourceColumn: SubAccount
+
+	partition Account = m
+		mode: import
+		source =
+				let
+				    #"Read Account File" = Csv.Document(File.Contents(#"Data Folder" & "\dim_account.csv"), [Delimiter=",", Columns=6, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Header Row" = Table.PromoteHeaders(#"Read Account File", [PromoteAllScalars=true]),
+				    #"Applied Types" = Table.TransformColumnTypes(#"Promoted Header Row", {{"Account_key", Int64.Type}, {"Class", type text}, {"SubClass", type text}, {"SubClass2", type text}, {"Account", type text}, {"SubAccount", type text}})
+				in
+				    #"Applied Types"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,20 @@
+relationship 'Financials to Date'
+	fromColumn: Financials.Date
+	toColumn: Date.Date
+
+relationship 'Financials to Business Unit'
+	fromColumn: Financials.Territory_key
+	toColumn: 'Business Unit'.Territory_key
+
+relationship 'Financials to Account'
+	fromColumn: Financials.Account_key
+	toColumn: Account.Account_key
+
+relationship 'Financials to Scenario'
+	fromColumn: Financials.Scenario
+	toColumn: Scenario.Scenario
+
+relationship 'P&L Line to PL Bridge'
+	fromColumn: 'PL Bridge'.'PL Sort'
+	toColumn: 'P&L Line'.'PL Sort'
+

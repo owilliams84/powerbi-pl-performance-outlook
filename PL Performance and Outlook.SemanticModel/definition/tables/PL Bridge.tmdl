@@ -1,0 +1,33 @@
+/// Maps each P&L line to the accounts that roll into it. A subtotal line maps to every account
+/// beneath it, so accounts appear against several lines - which is exactly why the measures apply
+/// this list with TREATAS instead of joining it to the fact table.
+table 'PL Bridge'
+	isHidden
+	lineageTag: 60d574a2-89a7-4262-847f-bf1e31873bcb
+
+	column 'PL Sort'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0f73ef69-cdbb-4652-a573-92fa3b4d8484
+		summarizeBy: none
+		sourceColumn: PL Sort
+
+	column Account_key
+		dataType: int64
+		formatString: 0
+		lineageTag: e088783d-b586-40b4-9fa4-2a37e781df17
+		summarizeBy: none
+		sourceColumn: Account_key
+
+	partition 'PL Bridge' = m
+		mode: import
+		source =
+				let
+				    #"Read Bridge File" = Csv.Document(File.Contents(#"Data Folder" & "\bridge_pl_account.csv"), [Delimiter=",", Columns=2, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Header Row" = Table.PromoteHeaders(#"Read Bridge File", [PromoteAllScalars=true]),
+				    #"Applied Types" = Table.TransformColumnTypes(#"Promoted Header Row", {{"PL Sort", Int64.Type}, {"Account_key", Int64.Type}})
+				in
+				    #"Applied Types"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,32 @@
+/// Actual, Budget, Forecast. Kept as a real dimension so a scenario can be sliced directly, even
+/// though the report's column measures pin the scenario themselves.
+table Scenario
+	lineageTag: 8ce7b644-7d6b-4b97-bcb5-c435329024ec
+
+	column Scenario
+		dataType: string
+		lineageTag: 59d734b6-fb60-4819-be86-d1cf8ae9294f
+		summarizeBy: none
+		sourceColumn: Scenario
+		sortByColumn: 'Scenario Sort'
+
+	column 'Scenario Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ede2de7d-22f9-4ab2-8ce1-bf4a0b592e0a
+		summarizeBy: none
+		sourceColumn: Scenario Sort
+
+	partition Scenario = m
+		mode: import
+		source =
+				let
+				    #"Read Scenario File" = Csv.Document(File.Contents(#"Data Folder" & "\dim_scenario.csv"), [Delimiter=",", Columns=2, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Header Row" = Table.PromoteHeaders(#"Read Scenario File", [PromoteAllScalars=true]),
+				    #"Applied Types" = Table.TransformColumnTypes(#"Promoted Header Row", {{"Scenario", type text}, {"Scenario Sort", Int64.Type}})
+				in
+				    #"Applied Types"
+
+	annotation PBI_ResultType = Table
+

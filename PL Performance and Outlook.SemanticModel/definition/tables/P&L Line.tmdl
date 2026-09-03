@@ -1,0 +1,68 @@
+/// The statement's row axis: 21 ordered reporting lines from Revenue down to Net Income %,
+/// including the subtotal and margin rows. Disconnected from the fact table on purpose - a line
+/// resolves to its accounts through PL Bridge, which is what lets a subtotal row and its
+/// component rows coexist in one matrix without double counting.
+table 'P&L Line'
+	lineageTag: 85062b86-fb4f-4e08-9520-8e43f8216efa
+
+	column 'PL Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4f09de8e-7e37-457d-bde3-4df407abfa9f
+		summarizeBy: none
+		sourceColumn: PL Sort
+
+	column 'PL Line'
+		dataType: string
+		lineageTag: bec9810e-56e3-4337-8206-6ce55a656a72
+		summarizeBy: none
+		sourceColumn: PL Line
+		sortByColumn: 'PL Sort'
+
+	/// 1 for headline lines, 2 for the indented breakdown and margin rows beneath them.
+	column Level
+		dataType: int64
+		formatString: 0
+		lineageTag: 7df8ec67-e40f-4242-9521-8eb2b92d0547
+		summarizeBy: none
+		sourceColumn: Level
+
+	/// Detail, Subtotal or Margin. Margin rows carry the account set of the subtotal they measure,
+	/// so the same measures resolve to that subtotal's value and the ratio has a numerator.
+	column 'Row Type'
+		dataType: string
+		lineageTag: f94f85af-3b87-47ea-8151-e8a4709659f5
+		summarizeBy: none
+		sourceColumn: Row Type
+
+	/// -1 on naturally negative cost lines, so costs print positive the way a statement reads.
+	/// Also doubles as the favourability rule: variance x display sign > 0 is a good outcome.
+	column 'Display Sign'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 82849266-5c70-40ea-a46b-122615bdc793
+		summarizeBy: none
+		sourceColumn: Display Sign
+
+	column 'Is Subtotal'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 943ca1bd-b1d1-4ef4-9284-a112fbe34ad8
+		summarizeBy: none
+		sourceColumn: Is Subtotal
+
+	partition 'P&L Line' = m
+		mode: import
+		source =
+				let
+				    #"Read PL Line File" = Csv.Document(File.Contents(#"Data Folder" & "\dim_pl_line.csv"), [Delimiter=",", Columns=6, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Header Row" = Table.PromoteHeaders(#"Read PL Line File", [PromoteAllScalars=true]),
+				    #"Applied Types" = Table.TransformColumnTypes(#"Promoted Header Row", {{"PL Sort", Int64.Type}, {"PL Line", type text}, {"Level", Int64.Type}, {"Row Type", type text}, {"Display Sign", Int64.Type}, {"Is Subtotal", Int64.Type}})
+				in
+				    #"Applied Types"
+
+	annotation PBI_ResultType = Table
+
