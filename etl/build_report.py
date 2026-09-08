@@ -21,7 +21,7 @@ DEFN = os.path.join(REPORT, "definition")
 SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition"
 V_VISUAL = f"{SCHEMA}/visualContainer/2.5.0/schema.json"
 V_PAGE = f"{SCHEMA}/page/2.0.0/schema.json"
-V_REPORT = f"{SCHEMA}/report/3.1.0/schema.json"
+V_REPORT = f"{SCHEMA}/report/3.3.0/schema.json"
 V_PAGES = f"{SCHEMA}/pagesMetadata/1.0.0/schema.json"
 V_VERSION = f"{SCHEMA}/versionMetadata/1.0.0/schema.json"
 
@@ -560,7 +560,9 @@ def main():
 
     write_json(os.path.join(DEFN, "version.json"), {"$schema": V_VERSION, "version": "2.0.0"})
 
-    versions = {"visual": "2.5.0", "report": "3.1.0", "page": "2.0.0"}
+    # The versions Desktop itself writes back on save. Leaving the older set here meant every
+    # save produced a diff against the generator, and the generator then undid it on the next run.
+    versions = {"visual": "2.12.0", "report": "3.4.0", "page": "2.3.1"}
     write_json(os.path.join(DEFN, "report.json"), {
         "$schema": V_REPORT,
         "themeCollection": {
@@ -573,12 +575,17 @@ def main():
             "section": obj(verticalAlignment=text("Top")),
             "outspacePane": obj(expanded=boolean(False)),
         },
-        "resourcePackages": [{
-            "name": "RegisteredResources",
-            "type": "RegisteredResources",
-            "items": [{"name": THEME_FILE, "path": THEME_FILE, "type": "CustomTheme"},
-                      {"name": MARK_FILE, "path": MARK_FILE, "type": "Image"}],
-        }],
+        # Two packages, not one. The SharedResources entry naming the base theme was missing,
+        # and Desktop silently added it back on the first save - so the generated report.json and
+        # the saved one disagreed until this matched.
+        "resourcePackages": [
+            {"name": "RegisteredResources", "type": "RegisteredResources",
+             "items": [{"name": MARK_FILE, "path": MARK_FILE, "type": "Image"},
+                       {"name": THEME_FILE, "path": THEME_FILE, "type": "CustomTheme"}]},
+            {"name": "SharedResources", "type": "SharedResources",
+             "items": [{"name": "CY25SU12", "path": "BaseThemes/CY25SU12.json",
+                        "type": "BaseTheme"}]},
+        ],
         "settings": {"useStylableVisualContainerHeader": True},
     })
 

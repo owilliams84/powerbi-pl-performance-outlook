@@ -127,6 +127,24 @@ band needs `background: show=false` declared explicitly, or its white text lands
 vanishes. And the KPI card puts its label below the value: below about 96px the labels clip
 silently rather than wrapping.
 
+## Publishing to the Power BI Service
+
+Unlike the other reports in this series, this model **cannot refresh in the cloud**. Its partitions
+read a local folder through the `Data Folder` parameter, and the ledger may not be committed to a
+public repo, so there is no HTTPS source to point at. The published dataset reports
+`isOnPremGatewayRequired: true`.
+
+So it is published from **Power BI Desktop's own Publish button**, which uploads the `.pbix`
+*including the cached model data*. The report renders in the Service with real numbers; a scheduled
+refresh would fail unless an on-premises data gateway is configured against the same folder.
+
+Refresh the model in Desktop before publishing, or the upload carries an empty cache.
+
+Publishing from Desktop rewrites `report.json` on save. Two of those rewrites were Desktop
+correcting this generator, and both are now folded back in: the `SharedResources` package naming the
+base theme was missing entirely, and the schema versions were a release behind. Without that, every
+save produced a diff and the next generator run silently undid it.
+
 ## The same report, on the web
 
 The statement at
