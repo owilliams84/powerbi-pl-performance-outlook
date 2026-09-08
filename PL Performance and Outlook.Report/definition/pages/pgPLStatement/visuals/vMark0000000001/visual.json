@@ -1,35 +1,42 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
-  "name": "vBasis00000000001",
+  "name": "vMark0000000001",
   "position": {
     "x": 24,
-    "y": 104,
-    "z": 7000,
-    "width": 760,
-    "height": 24,
-    "tabOrder": 7000
+    "y": 12,
+    "z": 3000,
+    "width": 44,
+    "height": 38,
+    "tabOrder": 3000
   },
   "visual": {
-    "visualType": "textbox",
+    "visualType": "image",
     "objects": {
       "general": [
         {
           "properties": {
-            "paragraphs": [
-              {
-                "textRuns": [
-                  {
-                    "value": "FY2020  |  actuals through October + forecast  |  all business units  |  $000",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "10px",
-                      "color": "#667284"
-                    }
-                  }
-                ],
-                "horizontalTextAlignment": "left"
+            "imageUrl": {
+              "expr": {
+                "ResourcePackageItem": {
+                  "PackageName": "RegisteredResources",
+                  "PackageType": 1,
+                  "ItemName": "MilestoneMark.svg"
+                }
               }
-            ]
+            }
+          }
+        }
+      ],
+      "imageScaling": [
+        {
+          "properties": {
+            "imageScalingType": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Fit'"
+                }
+              }
+            }
           }
         }
       ]
@@ -69,7 +76,7 @@
           }
         }
       ],
-      "title": [
+      "background": [
         {
           "properties": {
             "show": {
@@ -108,7 +115,7 @@
           }
         }
       ],
-      "background": [
+      "title": [
         {
           "properties": {
             "show": {

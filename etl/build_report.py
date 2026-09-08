@@ -25,19 +25,25 @@ V_REPORT = f"{SCHEMA}/report/3.1.0/schema.json"
 V_PAGES = f"{SCHEMA}/pagesMetadata/1.0.0/schema.json"
 V_VERSION = f"{SCHEMA}/versionMetadata/1.0.0/schema.json"
 
-THEME_FILE = "PLPerformanceTheme.json"
+THEME_FILE = "MilestoneTheme.json"
+MARK_FILE = "MilestoneMark.svg"
 
 # ---------------------------------------------------------------- palette
-PAPER = "#F4F2EE"      # page ground, warm off-white
+# milestonebi.com's own tokens, so this reads as the same studio's work as the other three
+# reports: near-black indigo for text and the brand band, gold for the accent, and the site's
+# greys for everything that should recede.
+PAPER = "#F4F6FA"      # page ground
 SURFACE = "#FFFFFF"    # visual backgrounds
-RULE = "#E3DFD8"       # hairlines and borders
-INK = "#14283C"        # headline text
-BODY = "#3C4855"       # body text
-MUTED = "#7A8794"      # secondary text, axis labels
-ACTUAL = "#14283C"     # actual series
-BUDGET = "#A9B2BF"     # budget series - deliberately recessive
-FORECAST = "#C2703D"   # forecast series
-GOOD = "#186A4B"
+RULE = "#E3E7EF"       # hairlines and borders
+INK = "#0A0917"        # headline text, and the brand band
+BODY = "#4A5768"       # body text
+MUTED = "#667284"      # secondary text, axis labels
+NAVY = "#111F38"       # the logo's navy
+GOLD = "#C9A227"       # the accent, on both grounds
+ACTUAL = "#111F38"     # actual series
+BUDGET = "#BCC1D2"     # budget series - deliberately recessive
+FORECAST = "#C9A227"   # forecast series
+GOOD = "#1E7A4C"
 BAD = "#B3261E"
 
 CANVAS_W, CANVAS_H = 1440, 900
@@ -147,12 +153,41 @@ def visual(name, x, y, w, h, z, body):
 
 # ---------------------------------------------------------------- visuals
 
-def textbox(name, x, y, w, h, z, runs, align="left"):
+def textbox(name, x, y, w, h, z, runs, align="left", background=None):
+    # background and border are declared explicitly in both branches: the theme applies a white
+    # card and a hairline to every visual, textboxes included, so leaving them out puts a white
+    # box behind the title - and white text on the brand band disappears into it.
+    vco = {
+        "padding": obj(top=num(0), bottom=num(0), left=num(0), right=num(0)),
+        "title": obj(show=boolean(False)),
+        "border": obj(show=boolean(False)),
+        "dropShadow": obj(show=boolean(False)),
+        "background": obj(show=boolean(False)),
+    }
+    if background:
+        vco["background"] = obj(show=boolean(True), color=fill(background), transparency=num(0))
     return visual(name, x, y, w, h, z, {
         "visualType": "textbox",
         "objects": {"general": obj(paragraphs=[{"textRuns": runs, "horizontalTextAlignment": align}])},
+        "visualContainerObjects": vco,
+    })
+
+
+def image(name, x, y, w, h, z, resource):
+    """A registered image. The file has to be listed in report.json's resourcePackages with
+    type Image, and the binding is a ResourcePackageItem expression, not a literal path."""
+    return visual(name, x, y, w, h, z, {
+        "visualType": "image",
+        "objects": {
+            "general": obj(imageUrl={"expr": {"ResourcePackageItem": {
+                "PackageName": "RegisteredResources", "PackageType": 1, "ItemName": resource}}}),
+            "imageScaling": obj(imageScalingType=text("Fit")),
+        },
         "visualContainerObjects": {
             "padding": obj(top=num(0), bottom=num(0), left=num(0), right=num(0)),
+            "background": obj(show=boolean(False)),
+            "border": obj(show=boolean(False)),
+            "dropShadow": obj(show=boolean(False)),
             "title": obj(show=boolean(False)),
         },
     })
@@ -379,34 +414,54 @@ def build_page():
         z += 1000
         return z
 
-    visuals.append(textbox("vTitle0000000001", 24, 12, 760, 40, nxt(), [{
+    # Brand band. A textbox with a navy background rather than a shape - one fewer visual type
+    # to get right - with the registered mark and the wordmark sitting on top of it.
+    visuals.append(textbox("vBand0000000001", 0, 0, CANVAS_W, 60, nxt(), [{
+        "value": " ", "textStyle": {"fontSize": "6px", "color": INK},
+    }], background=INK))
+    visuals.append(image("vMark0000000001", 24, 12, 44, 38, nxt(), MARK_FILE))
+    visuals.append(textbox("vWordmark000001", 76, 15, 260, 32, nxt(), [
+        {"value": "Milestone ", "textStyle": {"fontFamily": "Segoe UI", "fontSize": "15px",
+                                              "fontWeight": "bold", "color": SURFACE}},
+        {"value": "BI", "textStyle": {"fontFamily": "Segoe UI", "fontSize": "15px",
+                                      "fontWeight": "bold", "color": GOLD}},
+    ]))
+    visuals.append(textbox("vRef0000000001", 1016, 22, 400, 22, nxt(), [{
+        "value": "01 / P&L STATEMENT",
+        "textStyle": {"fontFamily": "Consolas", "fontSize": "8px", "fontWeight": "bold",
+                      "color": GOLD, "letterSpacing": "2px"},
+    }], align="right"))
+
+    visuals.append(textbox("vTitle0000000001", 24, 68, 700, 36, nxt(), [{
         "value": "Profit & Loss — Performance & Outlook",
         "textStyle": {"fontFamily": "Segoe UI", "fontSize": "22px", "fontWeight": "600",
                       "color": INK},
     }]))
 
-    visuals.append(textbox("vBasis00000000001", 24, 52, 760, 24, nxt(), [{
+    visuals.append(textbox("vBasis00000000001", 24, 104, 760, 24, nxt(), [{
         "value": "FY2020  |  actuals through October + forecast  |  all business units  |  $000",
         "textStyle": {"fontFamily": "Segoe UI", "fontSize": "10px", "color": MUTED},
     }]))
 
-    visuals.append(slicer("vYear000000000001", 836, 8, 190, 80, nxt(),
+    # Dropdown slicers need at least 76px or the validator errors: header 28 + selector 32 +
+    # padding.
+    visuals.append(slicer("vYear000000000001", 786, 66, 200, 80, nxt(),
                           "Date", "Year", "FISCAL YEAR", mode="Dropdown",
                           preselect=[2020], alias="d", numeric=True))
-    visuals.append(slicer("vRegion0000000001", 1032, 8, 190, 80, nxt(),
+    visuals.append(slicer("vRegion0000000001", 996, 66, 200, 80, nxt(),
                           "Business Unit", "Region", "REGION", mode="Dropdown", alias="r"))
-
-    # The three-view switcher. Tiles rather than a dropdown, so all three questions are
-    # visible at once and switching between them is a single click.
-    visuals.append(slicer("vView000000000001", 24, 98, 560, 80, nxt(),
-                          "Report View", "View", "VIEW", mode="Basic", orientation=1,
-                          preselect=["Full-Year Landing"], alias="v"))
-
-    visuals.append(slicer("vBusUnit000000001", 1228, 8, 188, 80, nxt(),
+    visuals.append(slicer("vBusUnit000000001", 1206, 66, 210, 80, nxt(),
                           "Business Unit", "Business Unit", "BUSINESS UNIT",
                           mode="Dropdown", alias="b"))
 
-    visuals.append(kpi_card("vKpiStrip00000001", 596, 98, 820, 96, nxt(), [
+    # The three-view switcher. Tiles rather than a dropdown, so all three questions are
+    # visible at once and switching between them is a single click.
+    visuals.append(slicer("vView000000000001", 24, 152, 560, 96, nxt(),
+                          "Report View", "View", "VIEW", mode="Basic", orientation=1,
+                          preselect=["Full-Year Landing"], alias="v"))
+
+    # 96px, not less: the card puts its label below the value, and at 84 the labels clip.
+    visuals.append(kpi_card("vKpiStrip00000001", 596, 152, 820, 96, nxt(), [
         ("KPI Revenue FC", "Revenue"),
         ("KPI EBITDA FC", "EBITDA"),
         ("KPI EBITDA Margin FC", "EBITDA %"),
@@ -414,9 +469,9 @@ def build_page():
         ("KPI Net Income FC", "Net income"),
     ]))
 
-    visuals.append(statement_matrix("vStatement0000001", 24, 206, 884, 678, nxt()))
-    visuals.append(monthly_chart("vMonthly000000001", 924, 206, 492, 328, nxt()))
-    visuals.append(variance_chart("vVariance00000001", 924, 546, 492, 338, nxt()))
+    visuals.append(statement_matrix("vStatement0000001", 24, 260, 884, 624, nxt()))
+    visuals.append(monthly_chart("vMonthly000000001", 924, 260, 492, 300, nxt()))
+    visuals.append(variance_chart("vVariance00000001", 924, 572, 492, 312, nxt()))
 
     page = {
         "$schema": V_PAGE,
@@ -521,13 +576,21 @@ def main():
         "resourcePackages": [{
             "name": "RegisteredResources",
             "type": "RegisteredResources",
-            "items": [{"name": THEME_FILE, "path": THEME_FILE, "type": "CustomTheme"}],
+            "items": [{"name": THEME_FILE, "path": THEME_FILE, "type": "CustomTheme"},
+                      {"name": MARK_FILE, "path": MARK_FILE, "type": "Image"}],
         }],
         "settings": {"useStylableVisualContainerHeader": True},
     })
 
-    write_json(os.path.join(REPORT, "StaticResources", "RegisteredResources", THEME_FILE),
-               build_theme())
+    resources = os.path.join(REPORT, "StaticResources", "RegisteredResources")
+    write_json(os.path.join(resources, THEME_FILE), build_theme())
+    shutil.copyfile(os.path.join(HERE, "assets", "milestone-mark.svg"),
+                    os.path.join(resources, MARK_FILE))
+    # The report used to ship a theme under its own name; Desktop caches themes by file name, so
+    # the old one is removed rather than left to shadow the new palette.
+    stale = os.path.join(resources, "PLPerformanceTheme.json")
+    if os.path.exists(stale):
+        os.remove(stale)
 
     page, visuals = build_page()
     write_json(os.path.join(DEFN, "pages", "pages.json"), {

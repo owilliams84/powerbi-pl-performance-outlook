@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
   "name": "vBusUnit000000001",
   "position": {
-    "x": 1228,
-    "y": 8,
-    "z": 7000,
-    "width": 188,
+    "x": 1206,
+    "y": 66,
+    "z": 10000,
+    "width": 210,
     "height": 80,
-    "tabOrder": 7000
+    "tabOrder": 10000
   },
   "visual": {
     "visualType": "slicer",
@@ -90,7 +90,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#7A8794'"
+                      "Value": "'#667284'"
                     }
                   }
                 }
@@ -114,7 +114,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#3C4855'"
+                      "Value": "'#4A5768'"
                     }
                   }
                 }
@@ -236,7 +236,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#E3DFD8'"
+                      "Value": "'#E3E7EF'"
                     }
                   }
                 }

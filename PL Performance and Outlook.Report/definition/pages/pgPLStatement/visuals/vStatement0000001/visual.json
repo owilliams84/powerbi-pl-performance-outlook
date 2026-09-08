@@ -3,11 +3,11 @@
   "name": "vStatement0000001",
   "position": {
     "x": 24,
-    "y": 206,
-    "z": 9000,
+    "y": 260,
+    "z": 13000,
     "width": 884,
-    "height": 678,
-    "tabOrder": 9000
+    "height": 624,
+    "tabOrder": 13000
   },
   "visual": {
     "visualType": "pivotTable",
@@ -113,7 +113,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#7A8794'"
+                      "Value": "'#667284'"
                     }
                   }
                 }
@@ -169,7 +169,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#14283C'"
+                      "Value": "'#0A0917'"
                     }
                   }
                 }
@@ -232,7 +232,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#3C4855'"
+                      "Value": "'#4A5768'"
                     }
                   }
                 }
@@ -315,7 +315,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#E3DFD8'"
+                      "Value": "'#E3E7EF'"
                     }
                   }
                 }
@@ -333,7 +333,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#E3DFD8'"
+                      "Value": "'#E3E7EF'"
                     }
                   }
                 }
@@ -464,7 +464,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#E3DFD8'"
+                      "Value": "'#E3E7EF'"
                     }
                   }
                 }

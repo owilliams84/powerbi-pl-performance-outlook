@@ -21,3 +21,6 @@ __pycache__/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Working captures from the screenshot loop; only the cropped page is committed.
+screenshots/raw_*.png

@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
-  "name": "vBasis00000000001",
+  "name": "vRef0000000001",
   "position": {
-    "x": 24,
-    "y": 104,
-    "z": 7000,
-    "width": 760,
-    "height": 24,
-    "tabOrder": 7000
+    "x": 1016,
+    "y": 22,
+    "z": 5000,
+    "width": 400,
+    "height": 22,
+    "tabOrder": 5000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,15 +19,17 @@
               {
                 "textRuns": [
                   {
-                    "value": "FY2020  |  actuals through October + forecast  |  all business units  |  $000",
+                    "value": "01 / P&L STATEMENT",
                     "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "10px",
-                      "color": "#667284"
+                      "fontFamily": "Consolas",
+                      "fontSize": "8px",
+                      "fontWeight": "bold",
+                      "color": "#C9A227",
+                      "letterSpacing": "2px"
                     }
                   }
                 ],
-                "horizontalTextAlignment": "left"
+                "horizontalTextAlignment": "right"
               }
             ]
           }

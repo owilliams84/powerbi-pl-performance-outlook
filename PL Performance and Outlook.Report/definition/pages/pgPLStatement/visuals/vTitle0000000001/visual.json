@@ -3,11 +3,11 @@
   "name": "vTitle0000000001",
   "position": {
     "x": 24,
-    "y": 12,
-    "z": 2000,
-    "width": 760,
-    "height": 40,
-    "tabOrder": 2000
+    "y": 68,
+    "z": 6000,
+    "width": 700,
+    "height": 36,
+    "tabOrder": 6000
   },
   "visual": {
     "visualType": "textbox",
@@ -24,7 +24,7 @@
                       "fontFamily": "Segoe UI",
                       "fontSize": "22px",
                       "fontWeight": "600",
-                      "color": "#14283C"
+                      "color": "#0A0917"
                     }
                   }
                 ],
@@ -71,6 +71,45 @@
         }
       ],
       "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "dropShadow": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
         {
           "properties": {
             "show": {

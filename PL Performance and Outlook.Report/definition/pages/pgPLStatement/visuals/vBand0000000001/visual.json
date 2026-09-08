@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
-  "name": "vBasis00000000001",
+  "name": "vBand0000000001",
   "position": {
-    "x": 24,
-    "y": 104,
-    "z": 7000,
-    "width": 760,
-    "height": 24,
-    "tabOrder": 7000
+    "x": 0,
+    "y": 0,
+    "z": 2000,
+    "width": 1440,
+    "height": 60,
+    "tabOrder": 2000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,11 +19,10 @@
               {
                 "textRuns": [
                   {
-                    "value": "FY2020  |  actuals through October + forecast  |  all business units  |  $000",
+                    "value": " ",
                     "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "10px",
-                      "color": "#667284"
+                      "fontSize": "6px",
+                      "color": "#0A0917"
                     }
                   }
                 ],
@@ -114,7 +113,25 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#0A0917'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
                 }
               }
             }

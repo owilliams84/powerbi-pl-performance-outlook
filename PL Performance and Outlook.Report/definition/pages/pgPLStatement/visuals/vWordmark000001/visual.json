@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
-  "name": "vBasis00000000001",
+  "name": "vWordmark000001",
   "position": {
-    "x": 24,
-    "y": 104,
-    "z": 7000,
-    "width": 760,
-    "height": 24,
-    "tabOrder": 7000
+    "x": 76,
+    "y": 15,
+    "z": 4000,
+    "width": 260,
+    "height": 32,
+    "tabOrder": 4000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,11 +19,21 @@
               {
                 "textRuns": [
                   {
-                    "value": "FY2020  |  actuals through October + forecast  |  all business units  |  $000",
+                    "value": "Milestone ",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
-                      "fontSize": "10px",
-                      "color": "#667284"
+                      "fontSize": "15px",
+                      "fontWeight": "bold",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  {
+                    "value": "BI",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "15px",
+                      "fontWeight": "bold",
+                      "color": "#C9A227"
                     }
                   }
                 ],

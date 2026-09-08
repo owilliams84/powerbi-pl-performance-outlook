@@ -3,11 +3,11 @@
   "name": "vKpiStrip00000001",
   "position": {
     "x": 596,
-    "y": 98,
-    "z": 8000,
+    "y": 152,
+    "z": 12000,
     "width": 820,
     "height": 96,
-    "tabOrder": 8000
+    "tabOrder": 12000
   },
   "visual": {
     "visualType": "cardVisual",
@@ -122,7 +122,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#14283C'"
+                      "Value": "'#0A0917'"
                     }
                   }
                 }
@@ -177,7 +177,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#7A8794'"
+                      "Value": "'#667284'"
                     }
                   }
                 }
@@ -225,7 +225,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#14283C'"
+                      "Value": "'#111F38'"
                     }
                   }
                 }
@@ -339,7 +339,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#E3DFD8'"
+                      "Value": "'#E3E7EF'"
                     }
                   }
                 }

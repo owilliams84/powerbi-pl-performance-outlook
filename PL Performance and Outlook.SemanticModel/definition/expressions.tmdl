@@ -1,5 +1,5 @@
 /// Absolute path to the folder holding the CSV star schema written by etl/build_star_schema.py.
 /// Repoint this one value at your own copy of data/ after cloning - it is the only path in the project.
-expression 'Data Folder' = "C:\Data\PL-Performance-Outlook\data" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+expression 'Data Folder' = "C:\Users\OmarWilliams\OneDrive - MILESTONEBI\Projects\Claude Projects\ClaudeCode\PL-Performance-Outlook\data" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
 	lineageTag: 19cc4055-cb9c-488e-8324-fce8f121ba13
 

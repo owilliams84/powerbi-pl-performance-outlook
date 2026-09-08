@@ -1,41 +1,41 @@
 {
-  "name": "PLPerformanceTheme.json",
+  "name": "MilestoneTheme.json",
   "dataColors": [
-    "#14283C",
-    "#A9B2BF",
-    "#C2703D",
-    "#186A4B",
+    "#111F38",
+    "#BCC1D2",
+    "#C9A227",
+    "#1E7A4C",
     "#B3261E",
     "#4A6E8A",
     "#A8894F",
-    "#7A8794"
+    "#667284"
   ],
-  "background": "#F4F2EE",
-  "foreground": "#3C4855",
-  "tableAccent": "#14283C",
-  "good": "#186A4B",
-  "neutral": "#7A8794",
+  "background": "#F4F6FA",
+  "foreground": "#4A5768",
+  "tableAccent": "#111F38",
+  "good": "#1E7A4C",
+  "neutral": "#667284",
   "bad": "#B3261E",
   "textClasses": {
     "title": {
       "fontFace": "Segoe UI Semibold",
       "fontSize": 14,
-      "color": "#14283C"
+      "color": "#0A0917"
     },
     "header": {
       "fontFace": "Segoe UI Semibold",
       "fontSize": 11,
-      "color": "#14283C"
+      "color": "#0A0917"
     },
     "label": {
       "fontFace": "Segoe UI",
       "fontSize": 9,
-      "color": "#3C4855"
+      "color": "#4A5768"
     },
     "callout": {
       "fontFace": "Segoe UI",
       "fontSize": 20,
-      "color": "#14283C"
+      "color": "#0A0917"
     }
   },
   "visualStyles": {
@@ -56,7 +56,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#E3DFD8"
+                "color": "#E3E7EF"
               }
             },
             "radius": 4
