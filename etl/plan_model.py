@@ -22,98 +22,30 @@ Conventions the measures rely on:
 
 from __future__ import annotations
 
-import uuid
 from pathlib import Path
+
+from milestone_pbir import (
+    BAD, GOOD, INK, NAVY, RULE, add_table_refs, card, disconnected_table_tmdl, diverging_bar,
+    empty_card, indent, measure, measure_table_tmdl, money as _money, pct, pp, rank_measure,
+    ring, ring_label, svg_uri, tagger, tone, write_lines,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 TABLES = ROOT / "PL Performance and Outlook.SemanticModel" / "definition" / "tables"
 MODEL = ROOT / "PL Performance and Outlook.SemanticModel" / "definition" / "model.tmdl"
-NS = uuid.UUID("2f1d5c7a-8e4b-4a3d-9c6e-7b8a1d2e3f40")
+tag = tagger("2f1d5c7a-8e4b-4a3d-9c6e-7b8a1d2e3f40", "plan")
 
-GOOD, BAD, INK, BODY, MUTED, RULE, GOLD, NAVY = (
-    "#1E7A4C", "#B3261E", "#0A0917", "#4A5768", "#667284", "#E3E7EF", "#C9A227", "#111F38")
 TOP_N = 8
 ENTITY = "Plan Metrics"
 
 
-def tag(*parts: str) -> str:
-    return str(uuid.uuid5(NS, "plan:" + ":".join(parts)))
-
-
-def q(name: str) -> str:
-    return name if name.replace("_", "").isalnum() else f"'{name}'"
-
-
-# --------------------------------------------------------------------------------------------
-# SVG helpers (from the milestone-report-design starter, money in $000)
-# --------------------------------------------------------------------------------------------
-
-
-def svg_uri(body: str = "Svg") -> str:
-    """'%' before '#': unencoded, "3.6%" is read as an escape and '#' ends the URI."""
-    return f'"data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE({body}, "%", "%25"), "#", "%23")'
-
-
 def money(expr: str, signed: bool = False) -> str:
-    body = f'FORMAT(ABS({expr}) / 1000, "#,0") & "k"'
-    if signed:
-        return f'IF({expr} < 0, "&#8722;$", "+$") & {body}'
-    return f'IF({expr} < 0, "&#8722;$", "$") & {body}'
-
-
-def pct(expr: str) -> str:
-    return (f'IF(ISBLANK({expr}), "new", IF({expr} < 0, "&#8722;", "+") & FORMAT(ABS({expr}), "0.0%"))')
-
-
-def pp(a: str, b: str) -> str:
-    return f'IF({a} - {b} < 0, "&#8722;", "+") & FORMAT(ABS({a} - {b}) * 100, "0.0") & "pp"'
-
-
-def tone(expr: str) -> str:
-    return f'IF({expr} >= 0, "{GOOD}", "{BAD}")'
-
-
-def ring(cx: int, cy: int, r: int, share: str, colour: str, over: str | None = None) -> str:
-    def arc(s: str, col: str) -> str:
-        return (
-            f'IF({s} > 0, "<path d=\'M{cx},{cy - r} A{r},{r} 0 " & IF({s} > 0.5, "1", "0") & " 1 " & '
-            f'FORMAT({cx} + {r} * COS(2 * PI() * MIN({s}, 0.9999) - PI() / 2), "0.00") & "," & '
-            f'FORMAT({cy} + {r} * SIN(2 * PI() * MIN({s}, 0.9999) - PI() / 2), "0.00") & '
-            f'"\' stroke=\'{col}\' stroke-width=\'7\' fill=\'none\'/>")'
-        )
-    out = f'"<circle cx=\'{cx}\' cy=\'{cy}\' r=\'{r}\' stroke=\'{RULE}\' stroke-width=\'7\' fill=\'none\'/>" & {arc(share, colour)}'
-    if over:
-        out += f" & {arc(over, GOLD)}"
-    return out
-
-
-def card(label: str, value: str, note: str, row1: tuple, row2: tuple, graphic: str) -> str:
-    def row(y: int, r: tuple) -> str:
-        return (f'"<text x=\'16\' y=\'{y}\' font-size=\'11.5\' fill=\'{BODY}\'>" & {r[0]} & "</text>'
-                f'<text x=\'320\' y=\'{y}\' font-size=\'11.5\' font-weight=\'600\' text-anchor=\'end\' fill=\'" & {r[2]} & "\'>" & {r[1]} & "</text>"')
-    return "\n".join([
-        f'"<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'336\' height=\'140\' viewBox=\'0 0 336 140\' font-family=\'Segoe UI, sans-serif\'>"',
-        f'& "<rect x=\'0.5\' y=\'0.5\' width=\'335\' height=\'139\' rx=\'4\' fill=\'#FFFFFF\' stroke=\'{RULE}\'/><rect width=\'3\' height=\'140\' fill=\'{GOLD}\'/>"',
-        f'& "<text x=\'16\' y=\'24\' font-size=\'11\' font-weight=\'700\' fill=\'{MUTED}\' letter-spacing=\'0.4\'>" & {label} & "</text>"',
-        f'& "<text x=\'16\' y=\'58\' font-size=\'28\' font-weight=\'700\' fill=\'{INK}\'>" & {value} & "</text>"',
-        f'& "<text x=\'16\' y=\'76\' font-size=\'11.5\' fill=\'{MUTED}\'>" & {note} & "</text>"',
-        f'& "<line x1=\'16\' y1=\'88\' x2=\'320\' y2=\'88\' stroke=\'{RULE}\'/>"',
-        f"& {row(107, row1)}",
-        f"& {row(127, row2)}",
-        f"& {graphic}",
-        '& "</svg>"',
-    ])
+    """Card amounts on this page are in $k."""
+    return _money(expr, signed, thousands=True)
 
 
 def no_comparison_card(label: str) -> str:
-    return (f'"<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'336\' height=\'140\' viewBox=\'0 0 336 140\' font-family=\'Segoe UI, sans-serif\'>'
-            f'<rect x=\'0.5\' y=\'0.5\' width=\'335\' height=\'139\' rx=\'4\' fill=\'#FFFFFF\' stroke=\'{RULE}\'/>'
-            f'<text x=\'16\' y=\'24\' font-size=\'11\' font-weight=\'700\' fill=\'{MUTED}\'>{label}</text>'
-            f'<text x=\'16\' y=\'64\' font-size=\'13\' fill=\'{BODY}\'>Nothing to compare with for this year.</text></svg>"')
-
-
-def indent(text: str, n: int = 1) -> str:
-    return "\n".join(("    " * n + line) if line else line for line in text.split("\n"))
+    return empty_card(label, "Nothing to compare with for this year.")
 
 
 def line_filter(line: str) -> str:
@@ -129,7 +61,7 @@ ACCOUNT_POOL = ("FILTER(ALL(Account[SubAccount]), "
 
 
 def M(name, dax, fmt=None, doc=None, category=None, hidden=False):
-    return dict(name=name, dax=dax.strip("\n"), fmt=fmt, doc=doc, category=category, hidden=hidden)
+    return measure(name, dax, fmt, doc, category, hidden)
 
 
 def measures() -> list[dict]:
@@ -197,18 +129,9 @@ RETURN
         M("Units In Play", f"IF([Plan Comparison Available], COUNTROWS({BU_POOL}))", "0",
           "ALLSELECTED: Business Unit is on the filter panel, and ALL would ignore it."),
         M("Units Ahead", f"IF([Plan Comparison Available], COUNTROWS(FILTER({BU_POOL}, [EBITDA Variance] > 0)))", "0"),
-        M("Unit EBITDA Bar", f"""
-VAR Change = [EBITDA Variance]
-VAR Scale = MAXX({BU_POOL}, ABS([EBITDA Variance]))
-VAR W = DIVIDE(ABS(Change), Scale) * 56
-VAR X = IF(Change >= 0, 60, 60 - W)
-VAR Svg =
-    "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='16' viewBox='0 0 120 16'>"
-        & "<line x1='60' y1='0' x2='60' y2='16' stroke='{MUTED}'/>"
-        & "<rect x='" & FORMAT(X, "0.0") & "' y='3' width='" & FORMAT(W, "0.0") & "' height='10' fill='" & {tone("Change")} & "'/>"
-        & "</svg>"
-RETURN
-    IF(NOT ISBLANK(Change) && HASONEVALUE('Business Unit'[Business Unit]), {svg_uri()})""", None,
+        M("Unit EBITDA Bar", diverging_bar(
+            "[EBITDA Variance]", f"MAXX({BU_POOL}, ABS([EBITDA Variance]))",
+            "NOT ISBLANK(Change) && HASONEVALUE('Business Unit'[Business Unit])"), None,
           "Diverging bar for a unit's EBITDA variance, scaled to the largest among the units selected.",
           category="ImageUrl"),
         M("Unit Variance % Label", """
@@ -223,34 +146,15 @@ RETURN IF(NOT ISBLANK([EBITDA Variance]), FORMAT(P, "+0.0%;-0.0%;0.0%"))""", Non
         M("Accounts In Play", f"IF([Plan Comparison Available], COUNTROWS({ACCOUNT_POOL}))", "0",
           "Accounts with any posting in either period."),
         M("Accounts Favourable", f"IF([Plan Comparison Available], COUNTROWS(FILTER({ACCOUNT_POOL}, [Account Effect] > 0)))", "0"),
-        M("Account Effect Rank", f"""
-VAR Direction = SELECTEDVALUE('Account Ranking'[Show], "Bottom")
-VAR Pool = {ACCOUNT_POOL}
-VAR Me = [Account Effect]
-RETURN
-    IF(
-        HASONEVALUE(Account[SubAccount]) && [Plan Comparison Available]
-            && (NOT ISBLANK([_Plan Actual]) || NOT ISBLANK([_Plan Comparison])),
-        IF(
-            Direction = "Top",
-            COUNTROWS(FILTER(Pool, [Account Effect] > Me)) + 1,
-            COUNTROWS(FILTER(Pool, [Account Effect] < Me)) + 1
-        )
-    )""", "0",
+        M("Account Effect Rank", rank_measure(
+            "'Account Ranking'[Show]", "Bottom", ACCOUNT_POOL, "[Account Effect]",
+            "HASONEVALUE(Account[SubAccount]) && [Plan Comparison Available]\n"
+            "            && (NOT ISBLANK([_Plan Actual]) || NOT ISBLANK([_Plan Comparison]))"), "0",
           f"Position by effect on profit, from the top or the bottom as 'Account Ranking' says. The table\n"
           f"keeps ranks 1 to {TOP_N} with a visual-level filter. ALL pool: that filter narrows ALLSELECTED."),
-        M("Account Effect Bar", f"""
-VAR Change = [Account Effect]
-VAR Scale = MAXX({ACCOUNT_POOL}, ABS([Account Effect]))
-VAR W = DIVIDE(ABS(Change), Scale) * 56
-VAR X = IF(Change >= 0, 60, 60 - W)
-VAR Svg =
-    "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='16' viewBox='0 0 120 16'>"
-        & "<line x1='60' y1='0' x2='60' y2='16' stroke='{MUTED}'/>"
-        & "<rect x='" & FORMAT(X, "0.0") & "' y='3' width='" & FORMAT(W, "0.0") & "' height='10' fill='" & {tone("Change")} & "'/>"
-        & "</svg>"
-RETURN
-    IF(NOT ISBLANK([Account Effect Rank]), {svg_uri()})""", None,
+        M("Account Effect Bar", diverging_bar(
+            "[Account Effect]", f"MAXX({ACCOUNT_POOL}, ABS([Account Effect]))",
+            "NOT ISBLANK([Account Effect Rank])"), None,
           "Diverging bar for an account's effect on profit, one scale for Top and Bottom.", category="ImageUrl"),
         M("Account Effect % Label", """
 VAR C = [_Plan Comparison]
@@ -494,94 +398,18 @@ DISCONNECTED = {
 # --------------------------------------------------------------------------------------------
 
 
-def doc(text: str | None, pad: str) -> list[str]:
-    return [f"{pad}/// {p}".rstrip() for p in text.split("\n")] if text else []
-
-
-def write(path: Path, lines: list[str]) -> None:
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
-
-
 def write_measure_table() -> int:
-    lines = doc("Measures behind page 02, Against Plan. Generated by etl/plan_model.py - edit that, not this.", "")
-    lines += [f"table {q(ENTITY)}", f"\tlineageTag: {tag('table', ENTITY)}"]
     specs = measures()
-    for s in specs:
-        lines.append("")
-        lines += doc(s["doc"], "\t")
-        body = s["dax"].split("\n")
-        if len(body) == 1:
-            lines.append(f"\tmeasure {q(s['name'])} = {body[0]}")
-        else:
-            lines.append(f"\tmeasure {q(s['name'])} =")
-            lines += [("\t\t\t" + b) if b.strip() else "\t\t\t" for b in body]
-        if s["fmt"]:
-            lines.append(f"\t\tformatString: {s['fmt']}")
-        if s["hidden"]:
-            lines.append("\t\tisHidden")
-        if s["category"]:
-            lines.append(f"\t\tdataCategory: {s['category']}")
-        lines.append(f"\t\tlineageTag: {tag('measure', s['name'])}")
-    lines += [
-        "",
-        "\tcolumn Placeholder",
-        "\t\tdataType: string",
-        "\t\tisHidden",
-        f"\t\tlineageTag: {tag('column', ENTITY, 'Placeholder')}",
-        "\t\tsummarizeBy: none",
-        "\t\tsourceColumn: [Placeholder]",
-        "",
-        f"\tpartition {q(ENTITY)} = calculated",
-        "\t\tmode: import",
-        "\t\tsource = ROW(\"Placeholder\", \"\")",
-    ]
-    write(TABLES / f"{ENTITY}.tmdl", lines)
+    write_lines(TABLES / f"{ENTITY}.tmdl", measure_table_tmdl(
+        ENTITY, specs, tag, "Measures behind page 02, Against Plan. Generated by etl/plan_model.py - edit that, not this."))
     return len(specs)
-
-
-def write_disconnected(name: str, doc_text: str, columns: list, rows: list) -> None:
-    lines = doc(doc_text, "") + [f"table {q(name)}", f"\tlineageTag: {tag('table', name)}"]
-    for col, dtype, sort_by in columns:
-        lines += ["", f"\tcolumn {q(col)}", f"\t\tdataType: {dtype}"]
-        if dtype == "int64":
-            lines += ["\t\tisHidden", "\t\tformatString: 0"]
-        lines += [f"\t\tlineageTag: {tag('column', name, col)}", "\t\tsummarizeBy: none", f"\t\tsourceColumn: {col}"]
-        if sort_by:
-            lines.append(f"\t\tsortByColumn: {q(sort_by)}")
-    fields = ", ".join((c if c.isidentifier() else f'#"{c}"') + (" = Int64.Type" if t == "int64" else " = text")
-                       for c, t, _ in columns)
-    data = ", ".join("{" + ", ".join(f'"{v}"' if isinstance(v, str) else str(v) for v in r) + "}" for r in rows)
-    lines += [
-        "",
-        f"\tpartition {q(name)} = m",
-        "\t\tmode: import",
-        "\t\tsource =",
-        "\t\t\t\tlet",
-        f"\t\t\t\t    Source = #table(type table [{fields}], {{{data}}})",
-        "\t\t\t\tin",
-        "\t\t\t\t    Source",
-        "",
-        "\tannotation PBI_ResultType = Table",
-    ]
-    write(TABLES / f"{name}.tmdl", lines)
-
-
-def add_refs() -> None:
-    text = MODEL.read_text(encoding="utf-8")
-    missing = [n for n in [ENTITY, *DISCONNECTED] if f"ref table {q(n)}" not in text]
-    if not missing:
-        return
-    marker = "ref table 'Report View'"
-    new = "\n".join(f"ref table {q(n)}" for n in missing)
-    text = text.replace(marker, marker + "\n" + new, 1)
-    MODEL.write_text(text, encoding="utf-8", newline="\n")
 
 
 def main() -> None:
     n = write_measure_table()
     for name, (doc_text, columns, rows) in DISCONNECTED.items():
-        write_disconnected(name, doc_text, columns, rows)
-    add_refs()
+        write_lines(TABLES / f"{name}.tmdl", disconnected_table_tmdl(name, doc_text, columns, rows, tag))
+    add_table_refs(MODEL, [ENTITY, *DISCONNECTED], after="ref table 'Report View'")
     print(f"{ENTITY}: {n} measures; toggle tables: {', '.join(DISCONNECTED)}")
 
 
