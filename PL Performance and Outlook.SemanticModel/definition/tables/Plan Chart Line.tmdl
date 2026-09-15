@@ -1,0 +1,28 @@
+/// Revenue or EBITDA, for page 02's monthly charts.
+table 'Plan Chart Line'
+	lineageTag: 1ff808d8-e392-5de3-83bf-cb9753032489
+
+	column Line
+		dataType: string
+		lineageTag: 0ddbbac9-fc09-53b2-aee4-b2246212b7b1
+		summarizeBy: none
+		sourceColumn: Line
+		sortByColumn: 'Line Order'
+
+	column 'Line Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b96734e9-0580-50c6-b2f1-9aba65ffcf3c
+		summarizeBy: none
+		sourceColumn: Line Order
+
+	partition 'Plan Chart Line' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Line = text, #"Line Order" = Int64.Type], {{"Revenue", 1}, {"EBITDA", 2}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

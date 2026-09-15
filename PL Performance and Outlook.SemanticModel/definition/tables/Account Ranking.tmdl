@@ -1,0 +1,29 @@
+/// Top or Bottom for page 02's account table. Its own table: two toggles on one column
+/// cross-filter each other.
+table 'Account Ranking'
+	lineageTag: 73435823-824b-5f22-ad70-a28f93b7a3dc
+
+	column Show
+		dataType: string
+		lineageTag: 488f056b-03d3-5264-8dc5-4ca0c1c42b31
+		summarizeBy: none
+		sourceColumn: Show
+		sortByColumn: 'Show Order'
+
+	column 'Show Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 20d1f1b5-1a4c-531c-97ec-c87322ad92b4
+		summarizeBy: none
+		sourceColumn: Show Order
+
+	partition 'Account Ranking' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Show = text, #"Show Order" = Int64.Type], {{"Top", 1}, {"Bottom", 2}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

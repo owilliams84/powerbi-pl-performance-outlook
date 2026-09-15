@@ -96,17 +96,65 @@ role, and hand-authored PBIR renders it as *"Can't determine relationships betwe
 Power BI never expands the parameter into the measures behind it. The disconnected-table approach
 needs no special metadata and is a plain star-schema pattern.
 
+## Page 02: against plan
+
+![Against plan](screenshots/against-plan.png)
+
+The statement answers *where are we*. Page 02 answers *why*: January to the October close, actual
+against the budget or against the same months a year earlier, for 2019 or 2020.
+
+It says something the statement only implies. In 2020 revenue is **3.6% behind budget but EBITDA
+is 26.2% behind**: costs did not come down with sales, and the EBITDA margin fell from 30.6% to
+23.4%. USA (−$324k) and the UK (−$312k) carry the miss while New Zealand and Germany beat their
+budgets, and the accounts that cost most are Sales itself (−$222k) and Commissions (−$82k). Against
+2019 the picture changes shape rather than colour - revenue up 37.7%, EBITDA up only 4.0%, the
+same margin squeeze.
+
+- **Cards are SVG, drawn by DAX** - revenue and EBITDA with a ring of actual as a share of the
+  comparison, a tile per business unit, and a bar per account. Each is one measure with
+  `dataCategory: ImageUrl`.
+- **Button slicers on disconnected tables** (`Plan Comparison`, `Plan Chart Line`,
+  `Account Ranking`) choose the comparison, Revenue or EBITDA on the charts, and top or bottom
+  accounts. Each toggle has its own table - two slicers on one column cross-filter each other.
+- **Effect on profit needs no sign table.** Amounts stay signed as posted, so actual minus
+  comparison is favourable when positive for income and cost alike.
+- **A filter panel** (Region, Business Unit) opens over the page from two bookmarks. Business-unit
+  pools use `ALLSELECTED` so the panel applies; the account pool uses `ALL`, because the Top/Bottom
+  filter would otherwise shrink it to the eight rows on screen.
+- **Every sentence is a measure** - the standfirst, titles and subtitles rewrite with each choice.
+  The standfirst judges the margin, not the two growth rates: its first version read "costs moved
+  in step with sales" for +37.7% revenue against +4.0% EBITDA.
+
+Built the way the whole series now is: mocked up in HTML with the real figures first
+(`design/plan-mockup.src.html`, built by `design/build_mockup.py`), then generated - `etl/plan_model.py` writes the four tables,
+`etl/plan_page.py` the page and bookmarks. Every figure was checked over XMLA against
+`etl/comparison_expected.py` - in full for 2020 against budget, the headline for the other states,
+and with a panel slicer pinned.
+
+![Against plan, other states](screenshots/against-plan-other-states.png)
+
+*Against 2019, Revenue on the charts, top accounts, and the filter panel open.*
+
+The page shows year-to-date totals for each of the 26 accounts across all business units. As with
+the statement, that is an aggregate of the ledger; no posting-level data is in this repository.
+
 ## Layout
 
 ```
 PL Performance and Outlook.pbip
-├── PL Performance and Outlook.SemanticModel/   TMDL: 9 tables, 55 measures, 5 relationships
-├── PL Performance and Outlook.Report/          PBIR: 1 page, 14 visuals, theme, brand mark
+├── PL Performance and Outlook.SemanticModel/   TMDL: 13 tables, 121 measures, 5 relationships
+├── PL Performance and Outlook.Report/          PBIR: 2 pages, 40 visuals, 2 bookmarks, theme, mark
 ├── data/                                       not committed - see "Where the data comes from"
+├── design/                                     the HTML mockup page 02 was built from
 ├── web/pl-performance-outlook.json             the aggregate summary the website page reads
 └── etl/
     ├── build_star_schema.py                    source workbook -> star schema
     ├── build_report.py                         generates every PBIR visual, the theme and the band
+    ├── plan_model.py                           generates page 02's measure table and toggle tables
+    ├── plan_page.py                            page 02's visuals and filter-panel bookmarks
+    ├── comparison_expected.py                  page 02's figures from the CSVs, in pandas
+    ├── verify_plan.ps1                         the same figures read back from the live model
+    ├── refresh_model.ps1                       refreshes the open model over its XMLA endpoint
     ├── build_web_data.py                       emits the statement summary for the website
     ├── crop_screenshots.py                     crops Desktop captures to the report canvas
     └── check_tmdl.ps1                          parses the TMDL before opening Desktop
@@ -165,11 +213,14 @@ Download [the dataset](https://www.kaggle.com/datasets/irfansharif/generalledger
 `Data file for students.xlsx` in `data/source/`, then:
 
 ```bash
-python etl/build_star_schema.py && python etl/build_report.py
+python etl/build_star_schema.py && python etl/plan_model.py && python etl/build_report.py
 ```
 
-The first script turns the ledger into the CSV star schema the model reads; the second
-regenerates every PBIR visual. Needs Python with `openpyxl`.
+The first script turns the ledger into the CSV star schema the model reads; the second writes page
+02's four tables into the otherwise hand-written TMDL; the third regenerates every PBIR visual.
+Needs Python with `openpyxl`. **Close Power BI Desktop before running them** - `powerbi-desktop
+reload` writes Desktop's in-memory copy back over the generated files, which silently undid a
+regenerated measure here.
 
 Then validate the report definition and the model:
 
@@ -207,6 +258,19 @@ EBIT 1,282 + Net Financial Result 22          = EBT 1,304
 EBT 1,304 − Taxes 217                         = Net Income 1,088
 AC YTD 5,893 + FC to Go 1,627                 = FC FY 7,520
 ```
+
+Page 02 is checked the same way, against pandas with no DAX involved, in every state it can show:
+
+```bash
+powershell -File etl/refresh_model.ps1
+powershell -File etl/verify_plan.ps1 -Year 2020 -Comparison "Budget"
+python etl/comparison_expected.py 2020 budget
+```
+
+2020 against budget, $000: revenue 5,893 against 6,110; EBITDA 1,381 against 1,872; 2 of 7
+business units ahead; 5 of 21 accounts favourable. Every month, unit and ranked account matched.
+So did the headline figures for 2020 against 2019 and 2019 against budget, and the unit count and
+EBITDA with Region = Europe pinned.
 
 ## Licence
 

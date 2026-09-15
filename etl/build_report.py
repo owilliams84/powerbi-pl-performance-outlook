@@ -13,6 +13,8 @@ import os
 import shutil
 import time
 
+import plan_page
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 REPORT = os.path.join(ROOT, "PL Performance and Outlook.Report")
@@ -600,16 +602,30 @@ def main():
         os.remove(stale)
 
     page, visuals = build_page()
+    # Page 02 lives in its own module: it is built from design/plan-mockup.html with the
+    # milestone-report-design helpers, and its measures come from etl/plan_model.py.
+    plan, plan_visuals, plan_bookmarks = plan_page.build()
     write_json(os.path.join(DEFN, "pages", "pages.json"), {
         "$schema": V_PAGES,
-        "pageOrder": [page["name"]],
+        "pageOrder": [page["name"], plan["name"]],
         "activePageName": page["name"],
     })
-    write_json(os.path.join(DEFN, "pages", page["name"], "page.json"), page)
-    for v in visuals:
-        write_json(os.path.join(DEFN, "pages", page["name"], "visuals", v["name"], "visual.json"), v)
+    for pg, vs in ((page, visuals), (plan, plan_visuals)):
+        write_json(os.path.join(DEFN, "pages", pg["name"], "page.json"), pg)
+        for v in vs:
+            write_json(os.path.join(DEFN, "pages", pg["name"], "visuals", v["name"], "visual.json"), v)
 
-    print(f"Wrote 1 page, {len(visuals)} visuals to {REPORT}")
+    bookmarks_dir = os.path.join(DEFN, "bookmarks")
+    shutil.rmtree(bookmarks_dir, ignore_errors=True)
+    for bm in plan_bookmarks:
+        write_json(os.path.join(bookmarks_dir, f"{bm['name']}.bookmark.json"), bm)
+    write_json(os.path.join(bookmarks_dir, "bookmarks.json"), {
+        "$schema": f"{SCHEMA}/bookmarksMetadata/1.0.0/schema.json",
+        "items": [{"name": bm["name"]} for bm in plan_bookmarks],
+    })
+
+    print(f"Wrote 2 pages, {len(visuals) + len(plan_visuals)} visuals, "
+          f"{len(plan_bookmarks)} bookmarks to {REPORT}")
 
 
 if __name__ == "__main__":

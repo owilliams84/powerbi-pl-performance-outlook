@@ -19,6 +19,10 @@ ref table 'P&L Line'
 ref table 'PL Bridge'
 ref table Metrics
 ref table 'Report View'
+ref table 'Plan Metrics'
+ref table 'Plan Comparison'
+ref table 'Plan Chart Line'
+ref table 'Account Ranking'
 
 ref cultureInfo en-GB
 

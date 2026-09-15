@@ -1,0 +1,28 @@
+/// Button slicer values for what page 02 compares actuals with. No relationships.
+table 'Plan Comparison'
+	lineageTag: f4a0b337-dee7-5198-9df2-0e136a8bbeba
+
+	column Comparison
+		dataType: string
+		lineageTag: b8689ea3-d866-577d-ab2b-7a4f71694a64
+		summarizeBy: none
+		sourceColumn: Comparison
+		sortByColumn: 'Comparison Order'
+
+	column 'Comparison Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b5ec4a1f-cd1c-5546-91c0-af54bd2858e3
+		summarizeBy: none
+		sourceColumn: Comparison Order
+
+	partition 'Plan Comparison' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Comparison = text, #"Comparison Order" = Int64.Type], {{"Budget", 1}, {"Prior year", 2}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

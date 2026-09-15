@@ -20,7 +20,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "screenshots"
 BAND = (0x0A, 0x09, 0x17)
-PAGES = {"pgPLStatement": "statement"}
+PAGES = {"pgPLStatement": "statement", "pgAgainstPlan": "against-plan"}
 
 
 def find_canvas(im: Image.Image) -> tuple[int, int, int, int]:

@@ -24,3 +24,6 @@ desktop.ini
 
 # Working captures from the screenshot loop; only the cropped page is committed.
 screenshots/raw_*.png
+
+# The built mockup embeds the page's figures as JSON; design/build_mockup.py regenerates it from data/.
+design/plan-mockup.html
