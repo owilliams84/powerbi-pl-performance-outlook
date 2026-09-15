@@ -152,6 +152,7 @@ PL Performance and Outlook.pbip
     ├── build_report.py                         generates every PBIR visual, the theme and the band
     ├── plan_model.py                           generates page 02's measure table and toggle tables
     ├── plan_page.py                            page 02's visuals and filter-panel bookmarks
+    ├── milestone_pbir.py                       shared report/DAX/TMDL helpers (vendored library)
     ├── comparison_expected.py                  page 02's figures from the CSVs, in pandas
     ├── verify_plan.ps1                         the same figures read back from the live model
     ├── refresh_model.ps1                       refreshes the open model over its XMLA endpoint
