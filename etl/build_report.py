@@ -354,7 +354,7 @@ def monthly_chart(name, x, y, w, h, z):
                  "selector": {"metadata": "Metrics.Forecast (month)"}},
             ],
         },
-        "visualContainerObjects": container("Revenue by month — actual vs budget vs forecast"),
+        "visualContainerObjects": container("Revenue by month: actual vs budget vs forecast"),
     })
     # filterConfig is a sibling of "visual" at the root of visual.json, not a property inside
     # it. Pins the chart to the Revenue line so it does not follow the matrix row selection.
@@ -435,7 +435,7 @@ def build_page():
     }], align="right"))
 
     visuals.append(textbox("vTitle0000000001", 24, 68, 700, 36, nxt(), [{
-        "value": "Profit & Loss — Performance & Outlook",
+        "value": "Profit & Loss: Performance & Outlook",
         "textStyle": {"fontFamily": "Segoe UI", "fontSize": "22px", "fontWeight": "600",
                       "color": INK},
     }]))

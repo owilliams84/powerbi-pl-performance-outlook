@@ -503,7 +503,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Revenue by month — actual vs budget vs forecast'"
+                  "Value": "'Revenue by month: actual vs budget vs forecast'"
                 }
               }
             },
