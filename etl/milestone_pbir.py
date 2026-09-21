@@ -23,7 +23,9 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-VERSION = "1.0.0"
+import milestone_icons
+
+VERSION = "1.2.0"  # 1.2.0: card() takes an icon from milestone_icons, drawn left of the value
 
 # --------------------------------------------------------------------------------------------
 # Tokens
@@ -498,8 +500,12 @@ def pp(a: str, b: str) -> str:
     return f'IF({a} - {b} < 0, "&#8722;", "+") & FORMAT(ABS({a} - {b}) * 100, "0.0") & "pp"'
 
 
-def tone(expr: str) -> str:
-    """Green at or above zero, red below - only ever for a comparison, never for magnitude."""
+def tone(expr: str, higher_is_better: bool = True) -> str:
+    """Green at or above zero, red below - only ever for a comparison, never for magnitude.
+    higher_is_better=False flips it for measures where a rise is bad (leavers, turnover, cost):
+    red above zero, green at or below."""
+    if not higher_is_better:
+        return f'IF({expr} > 0, "{BAD}", "{GOOD}")'
     return f'IF({expr} >= 0, "{GOOD}", "{BAD}")'
 
 
@@ -526,9 +532,12 @@ def ring_label(cx: int, cy: int, text: str) -> str:
     return f'"<text x=\'{cx}\' y=\'{cy + 5}\' font-size=\'13\' font-weight=\'700\' text-anchor=\'middle\' fill=\'{INK}\'>" & {text} & "</text>"'
 
 
-def card(label: str, value: str, note: str, row1: tuple, row2: tuple, graphic: str) -> str:
+def card(label: str, value: str, note: str, row1: tuple, row2: tuple, graphic: str,
+         icon: str | None = None) -> str:
     """The 336x140 KPI card frame as DAX text. Arguments are DAX text expressions; each row is
-    (left text, right text, right colour). `graphic` fills the top-right corner."""
+    (left text, right text, right colour). `graphic` fills the top-right corner. `icon` names a
+    milestone_icons icon, drawn 30px high to the left of the value, which moves right to clear it."""
+    value_x = 56 if icon else 16
     def row(y: int, r: tuple) -> str:
         return (f'"<text x=\'16\' y=\'{y}\' font-size=\'11.5\' fill=\'{BODY}\'>" & {r[0]} & "</text>'
                 f'<text x=\'320\' y=\'{y}\' font-size=\'11.5\' font-weight=\'600\' text-anchor=\'end\' fill=\'" & {r[2]} & "\'>" & {r[1]} & "</text>"')
@@ -536,7 +545,8 @@ def card(label: str, value: str, note: str, row1: tuple, row2: tuple, graphic: s
         f'"<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'336\' height=\'140\' viewBox=\'0 0 336 140\' font-family=\'Segoe UI, sans-serif\'>"',
         f'& "<rect x=\'0.5\' y=\'0.5\' width=\'335\' height=\'139\' rx=\'4\' fill=\'#FFFFFF\' stroke=\'{RULE}\'/><rect width=\'3\' height=\'140\' fill=\'{GOLD}\'/>"',
         f'& "<text x=\'16\' y=\'24\' font-size=\'11\' font-weight=\'700\' fill=\'{MUTED}\' letter-spacing=\'0.4\'>" & {label} & "</text>"',
-        f'& "<text x=\'16\' y=\'58\' font-size=\'28\' font-weight=\'700\' fill=\'{INK}\'>" & {value} & "</text>"',
+        *([f'& "<g transform=\'translate(16 33) scale(0.625)\'>{milestone_icons.markup(icon)}</g>"'] if icon else []),
+        f'& "<text x=\'{value_x}\' y=\'58\' font-size=\'28\' font-weight=\'700\' fill=\'{INK}\'>" & {value} & "</text>"',
         f'& "<text x=\'16\' y=\'76\' font-size=\'11.5\' fill=\'{MUTED}\'>" & {note} & "</text>"',
         f'& "<line x1=\'16\' y1=\'88\' x2=\'320\' y2=\'88\' stroke=\'{RULE}\'/>"',
         f"& {row(107, row1)}",
@@ -555,9 +565,11 @@ def empty_card(label: str, message: str) -> str:
             f'<text x=\'16\' y=\'64\' font-size=\'13\' fill=\'{BODY}\'>{message}</text></svg>"')
 
 
-def diverging_bar(change: str, scale: str, show_when: str, width: int = 120) -> str:
-    """DAX for a table-cell SVG bar: zero line in the middle, green right / red left, scaled to
-    `scale`. Mark the measure dataCategory ImageUrl and set the pivot's image width to `width`.
+def diverging_bar(change: str, scale: str, show_when: str, width: int = 120,
+                  higher_is_better: bool = True) -> str:
+    """DAX for a table-cell SVG bar: zero line in the middle, rises right and falls left, scaled
+    to `scale`, coloured by tone() - pass higher_is_better=False when a rise is bad.
+    Mark the measure dataCategory ImageUrl and set the pivot's image width to `width`.
     Build `scale` from a pool that suits the table: ALL(column) when the table has a measure
     filter, ALLSELECTED(column) when a slicer targets the column."""
     half = width // 2
@@ -569,7 +581,7 @@ VAR X = IF(Change >= 0, {half}, {half} - W)
 VAR Svg =
     "<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='16' viewBox='0 0 {width} 16'>"
         & "<line x1='{half}' y1='0' x2='{half}' y2='16' stroke='{MUTED}'/>"
-        & "<rect x='" & FORMAT(X, "0.0") & "' y='3' width='" & FORMAT(W, "0.0") & "' height='10' fill='" & {tone("Change")} & "'/>"
+        & "<rect x='" & FORMAT(X, "0.0") & "' y='3' width='" & FORMAT(W, "0.0") & "' height='10' fill='" & {tone("Change", higher_is_better)} & "'/>"
         & "</svg>"
 RETURN
     IF({show_when}, {svg_uri()})"""

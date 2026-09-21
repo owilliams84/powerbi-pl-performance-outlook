@@ -267,6 +267,7 @@ VAR Svg =
     ('"Net income " & ' + money("NI"), pct("NIP"), tone("NIV")),
     ring(286, 42, 26, "MIN(Ratio, 1)", NAVY, "Ratio - 1")
     + f' & "<text x=\'286\' y=\'47\' font-size=\'13\' font-weight=\'700\' text-anchor=\'middle\' fill=\'{INK}\'>" & FORMAT(Ratio, "0%") & "</text>"',
+    icon="coin",
 ))}
 VAR NoComparison = {no_comparison_card("REVENUE")}
 RETURN
@@ -293,6 +294,7 @@ VAR Svg =
     ('IF(V < 0, "Gap to close", "Headroom")', money("V", True), tone("V")),
     ring(286, 42, 26, "MAX(MIN(Ratio, 1), 0)", NAVY, "Ratio - 1")
     + f' & "<text x=\'286\' y=\'47\' font-size=\'13\' font-weight=\'700\' text-anchor=\'middle\' fill=\'{INK}\'>" & FORMAT(Ratio, "0%") & "</text>"',
+    icon="bag",
 ))}
 VAR NoComparison = {no_comparison_card("EBITDA")}
 RETURN
@@ -328,6 +330,7 @@ VAR Svg =
     ('"Best &#183; " & MAXX(BestRow, \'Business Unit\'[Business Unit])', money("BestValue", True), tone("BestValue")),
     ('"Weakest &#183; " & MAXX(WorstRow, \'Business Unit\'[Business Unit])', money("WorstValue", True), tone("WorstValue")),
     "Tiles",
+    icon="bars",
 ))}
 VAR NoComparison = {no_comparison_card("UNITS AHEAD ON EBITDA")}
 RETURN
@@ -363,6 +366,7 @@ VAR Svg =
     ('"Best &#183; " & LEFT(MAXX(BestRow, Account[SubAccount]), 26)', money("BestValue", True), tone("BestValue")),
     ('"Worst &#183; " & LEFT(MAXX(WorstRow, Account[SubAccount]), 26)', money("WorstValue", True), tone("WorstValue")),
     "Bars",
+    icon="clipboard-check",
 ))}
 VAR NoComparison = {no_comparison_card("ACCOUNTS")}
 RETURN
