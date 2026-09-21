@@ -59,6 +59,31 @@
           "type": "Image"
         },
         {
+          "name": "KpiRevenue.svg",
+          "path": "KpiRevenue.svg",
+          "type": "Image"
+        },
+        {
+          "name": "KpiEbitda.svg",
+          "path": "KpiEbitda.svg",
+          "type": "Image"
+        },
+        {
+          "name": "KpiMargin.svg",
+          "path": "KpiMargin.svg",
+          "type": "Image"
+        },
+        {
+          "name": "KpiBudget.svg",
+          "path": "KpiBudget.svg",
+          "type": "Image"
+        },
+        {
+          "name": "KpiNetIncome.svg",
+          "path": "KpiNetIncome.svg",
+          "type": "Image"
+        },
+        {
           "name": "MilestoneTheme.json",
           "path": "MilestoneTheme.json",
           "type": "CustomTheme"

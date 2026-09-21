@@ -29,6 +29,14 @@ V_VERSION = f"{SCHEMA}/versionMetadata/1.0.0/schema.json"
 
 THEME_FILE = "MilestoneTheme.json"
 MARK_FILE = "MilestoneMark.svg"
+# KPI strip icons, drawn by etl/build_icons.py: registered name -> file in etl/assets.
+KPI_ICONS = {
+    "KpiRevenue.svg": "kpi-revenue.svg",
+    "KpiEbitda.svg": "kpi-ebitda.svg",
+    "KpiMargin.svg": "kpi-margin.svg",
+    "KpiBudget.svg": "kpi-budget.svg",
+    "KpiNetIncome.svg": "kpi-net-income.svg",
+}
 
 # ---------------------------------------------------------------- palette
 # milestonebi.com's own tokens, so this reads as the same studio's work as the other three
@@ -235,7 +243,7 @@ def kpi_card(name, x, y, w, h, z, entries):
     return visual(name, x, y, w, h, z, {
         "visualType": "cardVisual",
         "query": {"queryState": {"Data": {"projections": [
-            measure_field("Metrics", prop, display) for prop, display in entries]}}},
+            measure_field("Metrics", prop, display) for prop, display, _ in entries]}}},
         # value/label/accentBar all carry a _selectorHint of "default": without the id
         # selector these validate cleanly and then render unchanged.
         "objects": {
@@ -253,6 +261,23 @@ def kpi_card(name, x, y, w, h, z, entries):
             "accentBar": [{"properties": {
                 "show": boolean(True), "color": fill(ACTUAL), "width": integer(3)},
                 "selector": {"id": "default"}}],
+            # One icon per tile, to the left of its value. The shared settings sit on the
+            # default selector; each tile's picture is set against its own measure.
+            "image": [{"properties": {
+                "show": boolean(True), "position": text("Left"), "fit": text("Fit"),
+                "fixedSize": boolean(True), "size": integer(30), "imageAreaSize": integer(34),
+                "padding": integer(6)},
+                "selector": {"id": "default"}}] + [
+                {"properties": {
+                    "imageType": text("image"),
+                    "image": {"image": {
+                        "name": lit(f"'{icon}'"),
+                        "url": {"expr": {"ResourcePackageItem": {
+                            "PackageName": "RegisteredResources", "PackageType": 1,
+                            "ItemName": icon}}},
+                        "scaling": lit("'Fit'")}}},
+                 "selector": {"metadata": f"Metrics.{prop}"}}
+                for prop, _, icon in entries],
         },
         "visualContainerObjects": container(),
     })
@@ -464,11 +489,11 @@ def build_page():
 
     # 96px, not less: the card puts its label below the value, and at 84 the labels clip.
     visuals.append(kpi_card("vKpiStrip00000001", 596, 152, 820, 96, nxt(), [
-        ("KPI Revenue FC", "Revenue"),
-        ("KPI EBITDA FC", "EBITDA"),
-        ("KPI EBITDA Margin FC", "EBITDA %"),
-        ("KPI EBITDA Var BUD", "vs budget"),
-        ("KPI Net Income FC", "Net income"),
+        ("KPI Revenue FC", "Revenue", "KpiRevenue.svg"),
+        ("KPI EBITDA FC", "EBITDA", "KpiEbitda.svg"),
+        ("KPI EBITDA Margin FC", "EBITDA %", "KpiMargin.svg"),
+        ("KPI EBITDA Var BUD", "vs budget", "KpiBudget.svg"),
+        ("KPI Net Income FC", "Net income", "KpiNetIncome.svg"),
     ]))
 
     visuals.append(statement_matrix("vStatement0000001", 24, 260, 884, 624, nxt()))
@@ -582,8 +607,9 @@ def main():
         # the saved one disagreed until this matched.
         "resourcePackages": [
             {"name": "RegisteredResources", "type": "RegisteredResources",
-             "items": [{"name": MARK_FILE, "path": MARK_FILE, "type": "Image"},
-                       {"name": THEME_FILE, "path": THEME_FILE, "type": "CustomTheme"}]},
+             "items": [{"name": MARK_FILE, "path": MARK_FILE, "type": "Image"}]
+                      + [{"name": n, "path": n, "type": "Image"} for n in KPI_ICONS]
+                      + [{"name": THEME_FILE, "path": THEME_FILE, "type": "CustomTheme"}]},
             {"name": "SharedResources", "type": "SharedResources",
              "items": [{"name": "CY25SU12", "path": "BaseThemes/CY25SU12.json",
                         "type": "BaseTheme"}]},
@@ -595,6 +621,8 @@ def main():
     write_json(os.path.join(resources, THEME_FILE), build_theme())
     shutil.copyfile(os.path.join(HERE, "assets", "milestone-mark.svg"),
                     os.path.join(resources, MARK_FILE))
+    for registered, source in KPI_ICONS.items():
+        shutil.copyfile(os.path.join(HERE, "assets", source), os.path.join(resources, registered))
     # The report used to ship a theme under its own name; Desktop caches themes by file name, so
     # the old one is removed rather than left to shadow the new palette.
     stale = os.path.join(resources, "PLPerformanceTheme.json")

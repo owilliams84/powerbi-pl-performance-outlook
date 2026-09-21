@@ -149,6 +149,7 @@ PL Performance and Outlook.pbip
 ├── web/pl-performance-outlook.json             the aggregate summary the website page reads
 └── etl/
     ├── build_star_schema.py                    source workbook -> star schema
+    ├── build_icons.py                          draws the five KPI strip icons into etl/assets/
     ├── build_report.py                         generates every PBIR visual, the theme and the band
     ├── plan_model.py                           generates page 02's measure table and toggle tables
     ├── plan_page.py                            page 02's visuals and filter-panel bookmarks
