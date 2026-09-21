@@ -178,16 +178,41 @@ silently rather than wrapping.
 
 ## Publishing to the Power BI Service
 
-Unlike the other reports in this series, this model **cannot refresh in the cloud**. Its partitions
-read a local folder through the `Data Folder` parameter, and the ledger may not be committed to a
-public repo, so there is no HTTPS source to point at. The published dataset reports
-`isOnPremGatewayRequired: true`.
+The ledger may not be committed to a public repo, so the model cannot read its CSVs from GitHub the
+way the other reports in this series do. It reads them from somewhere private instead: the OneDrive
+for work (or SharePoint) copy of `data/`, which the Service reaches with an organisational sign-in
+and no gateway. The published model reports `isOnPremGatewayRequired: false` and refreshes in about
+three seconds.
 
-So it is published from **Power BI Desktop's own Publish button**, which uploads the `.pbix`
-*including the cached model data*. The report renders in the Service with real numbers; a scheduled
-refresh would fail unless an on-premises data gateway is configured against the same folder.
+The repository keeps the local-path model, which is what Desktop wants. Publishing stages a copy,
+rewrites the seven partitions and sends that:
 
-Refresh the model in Desktop before publishing, or the upload carries an empty cache.
+```
+powershell -File etl/publish_cloud_model.ps1 -WorkspaceId <guid> -ModelId <guid> -DataUrl "<https address of data/>"
+```
+
+`-DataUrl` is the folder's OneDrive address, for example
+`https://<tenant>-my.sharepoint.com/personal/<user>/Documents/<path>/data`. It is an argument rather
+than a constant so that nobody's tenant ends up in the repo.
+
+Two things decide whether this works, and both cost a failed attempt to learn:
+
+- **One data source, not seven.** Every partition calls `Web.Contents` on the same root with the
+  file in `RelativePath`, so the Service asks for one sign-in.
+- **The root must answer 200 to a bearer token.** Saving credentials makes the Service test them
+  with a GET on the root. The site's home page fails that test with *"The credentials provided for
+  the Web source are invalid"* (status 400), although the sign-in itself was fine. The site's REST
+  endpoint passes it, so the root is `<site>/_api/web` and each file is fetched as
+  `GetFileByServerRelativePath(decodedurl='<server-relative path>')/$value`.
+
+The script sets no credentials. An OAuth2 credential set through the API is a bare access token
+that expires within the hour. Signing in once in the Service (model settings, Data source
+credentials, OAuth2, privacy level Organizational) stores a refresh token instead.
+
+The report is a separate item and needs no data: `updateDefinition` on the report alone is enough
+for a layout or text change. Desktop's own Publish button still works too. It uploads the `.pbix`
+with its cached data, but it replaces the model with the local-path one, so run
+`publish_cloud_model.ps1` again afterwards.
 
 Publishing from Desktop rewrites `report.json` on save. Two of those rewrites were Desktop
 correcting this generator, and both are now folded back in: the `SharedResources` package naming the
